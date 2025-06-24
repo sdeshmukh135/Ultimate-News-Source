@@ -23,7 +23,18 @@ model User {
 model News {
  id       Int    @id @default(autoincrement())
  name String
- summary String
  userId Int
+ category String
+ articles Article[]
  user User @relation(fields: [userId], references:[id])
+}
+
+model Article {
+  id       Int    @id @default(autoincrement())
+  name String
+  releaseDate String
+  tags String[]
+  region String
+  newsId Int
+  news News @relation(fields: [newsId], references:[id])
 }
