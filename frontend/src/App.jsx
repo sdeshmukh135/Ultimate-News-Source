@@ -25,7 +25,6 @@ function App() {
     <Router>
       <main>
         <header>Veritas</header>
-
         <NavBar />
 
         <Routes>

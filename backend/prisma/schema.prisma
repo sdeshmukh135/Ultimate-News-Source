@@ -23,9 +23,12 @@ model User {
 model News {
  id       Int    @id @default(autoincrement())
  name String
- userId Int
+ releaseDate String
  category String
+ articleURL String
+ imageURL String?
  articles Article[]
+ userId Int
  user User @relation(fields: [userId], references:[id])
 }
 

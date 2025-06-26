@@ -41,7 +41,7 @@ app.use((err, req, res, next) => {
 
 app.use(session(sessionConfig));
 app.use(authRoutes);
-app.use(newsRoutes);
+app.use("/news", newsRoutes);
 app.use(articleRoutes);
 
 app.listen(PORT, () => {

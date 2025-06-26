@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import AuthForm from "./AuthForm.jsx";
 
 const SignUp = () => {
   const [formInput, setFormInput] = useState({ username: "", password: "" });
@@ -26,57 +26,36 @@ const SignUp = () => {
       });
 
       const data = await response.json();
+      console.log(data);
 
       if (response.ok) {
         setOutputMessage({
           type: "success",
-          text: "Signup successful! Please Login",
+          text: data.message,
         });
       } else {
         setOutputMessage({
           type: "error",
-          text: data.error || "Signup failed.",
+          text: data.error,
         });
       }
     } catch (error) {
       console.log("error: ", error);
       setOutputMessage({
         type: "error",
-        text: "Network error. Please try again.",
+        text: data.error,
       });
     }
   };
 
   return (
-    <form className="signupform" onSubmit={handleSubmit}>
-      <label htmlFor="username">Username: </label>
-      <input
-        type="text"
-        id="username"
-        name="username"
-        value={formInput.username}
-        onChange={handleChange}
-      />
-      <label htmlFor="password">Password: </label>
-      <input
-        type="text"
-        id="password"
-        name="password"
-        value={formInput.password}
-        onChange={handleChange}
-      />
-      <div className="formButtons">
-        <button type="submit">Sign Up</button>
-        <Link to="/">
-          <button type="button">Have an Account? Login In</button>
-        </Link>
-      </div>
-      {outputMessage && (
-        <div className={`message ${outputMessage.type}`}>
-          {outputMessage.text}
-        </div>
-      )}
-    </form>
+    <AuthForm
+      handleChange={handleChange}
+      handleSubmit={handleSubmit}
+      message={outputMessage}
+      formData={formInput}
+      type="Sign Up"
+    />
   );
 };
 
