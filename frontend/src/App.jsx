@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useEffect} from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "./contexts/UserContext";
 import SignUp from "./components/SignUp.jsx";
 import Login from "./components/Login.jsx";
@@ -9,6 +9,7 @@ import "./App.css";
 
 function App() {
   const { user, setUser } = useUser();
+  const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
 
   // set the user (whenever a new user is logged in)
   useEffect(() => {
@@ -24,12 +25,15 @@ function App() {
   return (
     <Router>
       <main>
-        <NavBar />
+        <NavBar setFilterOption={setFilterOption} />
 
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/news" element={<HomePage />} />
+          <Route
+            path="/news"
+            element={<HomePage filterOption={filterOption} />}
+          />
         </Routes>
 
         <footer>@2025 Veritas</footer>

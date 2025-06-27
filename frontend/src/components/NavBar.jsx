@@ -1,8 +1,9 @@
 import { useUser } from "../contexts/UserContext";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/NavBar.css";
+import FilterDropDown from "./FilterDropDown.jsx";
 
-const NavBar = () => {
+const NavBar = ({ setFilterOption }) => {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
 
@@ -27,6 +28,7 @@ const NavBar = () => {
   return (
     <nav>
       <header>Veritas</header>
+      <FilterDropDown setFilterOption={setFilterOption} />
       <div className="auth-links">
         {user ? (
           <>
