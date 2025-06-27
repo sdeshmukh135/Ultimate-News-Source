@@ -1,0 +1,27 @@
+.newsComponent {
+  transition: transform 0.3s ease-in-out;
+  max-height: auto;
+  max-width: 300px;
+  color: black;
+  margin: 10px;
+  padding: 10px;
+}
+
+.newsPic {
+  max-height: 90%;
+  max-width: 90%;
+  border-radius: 5%;
+}
+
+.newsComponent:hover {
+  box-shadow: 0 0 20px #9e0a0f;
+}
+
+.news-list {
+  display: flex;
+  flex-grow: 1;
+  padding: 20px;
+  height: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
