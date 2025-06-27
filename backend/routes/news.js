@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 router.get("/", async (req, res) => {
   try {
     const news = await prisma.news.findMany({
-      where: { userId: userId },
+      where: { userId: req.session.userId },
     });
 
     res.json(news);
@@ -17,29 +17,43 @@ router.get("/", async (req, res) => {
   }
 });
 
+// user does not access this? For now, will access when user input is considered in seeded data (maybe?)
 router.post("/seed-news", async (req, res) => {
-  const apiKey = process.env.API_KEY;
-  const response = await fetch(
-    `https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}&language=en`,
-  );
-  const data = await response.json();
-  const articles = data.articles;
-
-  console.log(articles);
-
-  // news to add
   const newsData = [];
-  for (const article of articles) {
-    const newArticle = {
-      name: article.title,
-      releaseDate: article.publishedAt,
-      category: "latest", // hardcoded for now until category is found
-      articleURL: article.url,
-      imageURL: article.urlToImage,
-      userId: req.session.userId,
-    };
+  const apiKey = process.env.API_KEY;
 
-    newsData.push(newArticle);
+  const Categories = {
+    // enum
+    BUSINESS: "business",
+    TECH: "technology",
+    ENTERTAINMENT: "entertainment",
+    GENERAL: "general",
+    HEALTH: "health",
+    SCIENCE: "science",
+    SPORTS: "sports",
+  };
+
+  // optimize? (O^2 time complexity)
+  for (const category of Object.values(Categories)) {
+    const response = await fetch(
+      `https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}&language=en&category=${category}`,
+    );
+    const data = await response.json();
+    const articles = data.articles;
+
+    for (const article of articles) {
+
+      const newArticle = {
+        name: article.title,
+        releaseDate: article.publishedAt.slice(0,10),
+        category: category, 
+        articleURL: article.url,
+        imageURL: article.urlToImage === "" ? null : article.urlToImage,
+        userId: req.session.userId,
+      };
+
+      newsData.push(newArticle);
+    }
   }
 
   await prisma.news.deleteMany(); // clear any initial inputs
@@ -51,6 +65,11 @@ router.post("/seed-news", async (req, res) => {
   const news = await prisma.news.findMany();
 
   res.status(201).json(news);
+});
+
+// update news (for changes to the schema, testing purposes)
+router.post("/update-news", async (req, res) => {
+  // TO-DO: add according to feature to change
 });
 
 // for testing purposes

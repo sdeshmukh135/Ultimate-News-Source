@@ -1,8 +1,36 @@
-const HomePage = () => {
-  // TO-DO: Fetch news from backend and display
-  // Default news and personalized news? Or maybe no news at all until logged in
+import { useState, useEffect } from "react";
+import NewsList from "./NewsList";
 
-  return <h2>News goes here</h2>;
+const HomePage = () => {
+  const [newsData, setNewsData] = useState(null);
+
+  useEffect(() => {
+    fetchNews();
+  }, []);
+
+  const fetchNews = () => {
+    fetch(`http://localhost:3000/news`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json(); // Parse JSON data from the response
+      })
+      .then((data) => {
+        // Handle successful response
+
+        setNewsData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching news:", error);
+      });
+  };
+
+  return (
+    <div className="HomePage">
+      {newsData && <NewsList newsData={newsData} />}
+    </div>
+  );
 };
 
 export default HomePage;

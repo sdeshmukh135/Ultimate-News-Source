@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect} from "react";
 import { useUser } from "./contexts/UserContext";
 import SignUp from "./components/SignUp.jsx";
 import Login from "./components/Login.jsx";
@@ -10,7 +10,7 @@ import "./App.css";
 function App() {
   const { user, setUser } = useUser();
 
-  // set the user (whenver a new user is logged in)
+  // set the user (whenever a new user is logged in)
   useEffect(() => {
     fetch("http://localhost:3000/loggedin", { credentials: "include" })
       .then((response) => response.json())
@@ -24,7 +24,6 @@ function App() {
   return (
     <Router>
       <main>
-        <header>Veritas</header>
         <NavBar />
 
         <Routes>

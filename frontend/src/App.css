@@ -1,17 +1,35 @@
-.App {
+main {
+  width: 100%;
   min-height: 100vh;
   text-align: center;
-  background-color: white;
+  background-color: #fef6eb;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
-header {
+.auth {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  padding: 10px;
+  justify-content: space-between;
 }
+
+footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 10px;
+
+  background-color: black;
+  color: white;
+
+  position: relative;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+

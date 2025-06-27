@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import AuthForm from "./AuthForm.jsx";
 
 const SignUp = () => {
@@ -26,7 +27,6 @@ const SignUp = () => {
       });
 
       const data = await response.json();
-      console.log(data);
 
       if (response.ok) {
         setOutputMessage({
@@ -48,13 +48,31 @@ const SignUp = () => {
     }
   };
 
+  const footer = (
+    <>
+      <div className="formButtons">
+        <button className="SignUpButton" type="submit">
+          Sign in
+        </button>
+        <Link to="/">
+          <button className="SignUpButton" type="button">
+            Have an Account? Login In
+          </button>
+        </Link>
+      </div>
+      {message && (
+        <div className={`message ${message.type}`}>{message.text}</div>
+      )}
+    </>
+  );
+
   return (
     <AuthForm
       handleChange={handleChange}
       handleSubmit={handleSubmit}
       message={outputMessage}
       formData={formInput}
-      type="Sign Up"
+      footer={footer}
     />
   );
 };

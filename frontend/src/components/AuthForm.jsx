@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import "../styles/AuthForm.css";
 
 const AuthForm = (props) => {
   return (
@@ -20,31 +20,7 @@ const AuthForm = (props) => {
         required
       />
 
-      {props.type === "Log In" ? (
-        <>
-          <button type="submit">{props.type}</button>
-
-          {props.message && (
-            <p className={`message ${props.message.type}`}>
-              {props.message.text}
-            </p>
-          )}
-        </>
-      ) : (
-        <>
-          <div className="formButtons">
-            <button type="submit">{props.type}</button>
-            <Link to="/">
-              <button type="button">Have an Account? Login In</button>
-            </Link>
-          </div>
-          {props.message && (
-            <div className={`message ${props.message.type}`}>
-              {props.message.text}
-            </div>
-          )}
-        </>
-      )}
+      {props.footer}
     </form>
   );
 };

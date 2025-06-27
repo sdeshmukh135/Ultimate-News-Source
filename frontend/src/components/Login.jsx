@@ -42,13 +42,20 @@ const Login = () => {
     }
   };
 
+  const footer = (
+    <>
+      <button type="submit">Log In</button>
+
+      {message && <p className={`message ${message.type}`}>{message.text}</p>}
+    </>
+  );
+
   return (
     <AuthForm
       handleChange={handleChange}
       handleSubmit={handleSubmit}
       formData={formData}
-      message={message}
-      type="Log In"
+      footer={footer}
     />
   );
 };

@@ -1,5 +1,6 @@
 import { useUser } from "../contexts/UserContext";
 import { Link, useNavigate } from "react-router-dom";
+import "../styles/NavBar.css";
 
 const NavBar = () => {
   const { user, setUser } = useUser();
@@ -24,25 +25,28 @@ const NavBar = () => {
   };
 
   return (
-    <div className="auth-links">
-      {user ? (
-        <>
-          <span className="welcome-message">Welcome, {user.username}</span>
-          <button type="button" onClick={handleLogout}>
-            Log Out
-          </button>
-        </>
-      ) : (
-        <>
-          <Link to="/signup">
-            <button type="button">Sign Up</button>
-          </Link>
-          <Link to="/">
-            <button type="button">Log In</button>
-          </Link>
-        </>
-      )}
-    </div>
+    <nav>
+      <header>Veritas</header>
+      <div className="auth-links">
+        {user ? (
+          <>
+            <span className="welcome-message">Welcome, {user.username}</span>
+            <button type="button" onClick={handleLogout}>
+              Log Out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/signup">
+              <button type="button">Sign Up</button>
+            </Link>
+            <Link to="/">
+              <button type="button">Log In</button>
+            </Link>
+          </>
+        )}
+      </div>
+    </nav>
   );
 };
 
