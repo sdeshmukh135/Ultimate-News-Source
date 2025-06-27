@@ -5,11 +5,7 @@ const NewsList = ({ newsData }) => {
   return (
     <div className="news-list">
       {newsData.map((article) => {
-        return (
-          <>
-            <NewsComponent article={article} />
-          </>
-        );
+        return <NewsComponent article={article} />;
       })}
     </div>
   );

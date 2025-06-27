@@ -33,6 +33,8 @@ router.post("/seed-news", async (req, res) => {
     SPORTS: "sports",
   };
 
+  // mock region data (for functionality purposes)-- could replace later with OpenAI API
+
   // optimize? (O^2 time complexity)
   for (const category of Object.values(Categories)) {
     const response = await fetch(
@@ -42,11 +44,10 @@ router.post("/seed-news", async (req, res) => {
     const articles = data.articles;
 
     for (const article of articles) {
-
       const newArticle = {
         name: article.title,
-        releaseDate: article.publishedAt.slice(0,10),
-        category: category, 
+        releaseDate: article.publishedAt.slice(0, 10),
+        category: category,
         articleURL: article.url,
         imageURL: article.urlToImage === "" ? null : article.urlToImage,
         userId: req.session.userId,
@@ -56,7 +57,7 @@ router.post("/seed-news", async (req, res) => {
     }
   }
 
-  await prisma.news.deleteMany(); // clear any initial inputs
+  //   await prisma.news.deleteMany(); // clear any initial inputs
 
   const newNews = await prisma.news.createMany({
     data: newsData,
@@ -70,6 +71,7 @@ router.post("/seed-news", async (req, res) => {
 // update news (for changes to the schema, testing purposes)
 router.post("/update-news", async (req, res) => {
   // TO-DO: add according to feature to change
+  // run when user input is added for personalized news (NewsAPI does not work on deployed projects)
 });
 
 // for testing purposes
