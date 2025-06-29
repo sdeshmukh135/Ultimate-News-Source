@@ -60,8 +60,8 @@ const SignUp = () => {
           </button>
         </Link>
       </div>
-      {message && (
-        <div className={`message ${message.type}`}>{message.text}</div>
+      {outputMessage && (
+        <div className={`message ${outputMessage.type}`}>{outputMessage.text}</div>
       )}
     </>
   );

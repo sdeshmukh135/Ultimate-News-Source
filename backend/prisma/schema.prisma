@@ -24,7 +24,7 @@ model News {
  id       Int    @id @default(autoincrement())
  name String
  releaseDate String
- category String
+ category String[]
  articleURL String
  imageURL String?
  articles Article[]
