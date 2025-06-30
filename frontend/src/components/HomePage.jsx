@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import Banner from "../components/Banner.jsx";
 import NewsList from "./NewsList";
 
-const HomePage = ({ filterOption }) => {
+const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
   const [filteredData, setFilteredData] = useState(null);
+  const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
 
   const dataToDisplay = filteredData || newsData;
 
@@ -35,6 +37,7 @@ const HomePage = ({ filterOption }) => {
       });
   };
 
+  // TO-DO: Transfer functionality of this method to the backend and modify for the categories of the new API
   const filterData = () => {
     let currentNewsData = [...newsData];
     let newData = null;
@@ -80,6 +83,7 @@ const HomePage = ({ filterOption }) => {
 
   return (
     <div className="HomePage">
+      <Banner setFilterOption={setFilterOption} />
       {dataToDisplay && <NewsList newsData={dataToDisplay} />}
     </div>
   );
