@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SubFilters, Filters } from "../components/FilterTypes.jsx";
 
 const FilterDropDown = ({ setFilterOption }) => {
   const [openDropDown, setOpenDropDown] = useState(false); // starts off closed
@@ -7,36 +8,62 @@ const FilterDropDown = ({ setFilterOption }) => {
     isCategory: false,
   }); // suboptions are closed as well (for the two categories with sub-options)
 
-  const FilterCategories = {
-    CATEGORY: "category",
-    RECENT: "recent",
-    REGION: "region",
-    SENTIMENT: "sentiment",
+  const getFilter = (filterType) => {
+    switch (filterType) {
+      case Filters.RECENT:
+        return [
+          SubFilters.NONE,
+          SubFilters.TODAY,
+          SubFilters.LAST_WEEK,
+          SubFilters.LAST_YEAR,
+        ];
+      case Filters.REGION:
+      case Filters.CATEGORY:
+        return [
+          SubFilters.NONE,
+          SubFilters.GENERAL,
+          SubFilters.BUSINESS,
+          SubFilters.ENTERTAINMENT,
+          SubFilters.FOOD,
+          SubFilters.HEALTH,
+          SubFilters.POLITICS,
+          SubFilters.SCIENCE,
+          SubFilters.SPORTS,
+          SubFilters.TECH,
+          SubFilters.TRAVEL,
+        ];
+      case Filters.SENTIMENT:
+      case Filters.NONE:
+        return []; // don't open any dropdown
+    }
   };
 
-  const RecentOptions = {
-    // recent dropdown
-    TODAY: "today",
-    PASTMONTH: "past month",
-    PASTYEAR: "past year",
-  };
-
-  const Categories = {
-    // category dropdown
-    BUSINESS: "business",
-    TECH: "technology",
-    ENTERTAINMENT: "entertainment",
-    GENERAL: "general",
-    HEALTH: "health",
-    SCIENCE: "science",
-    SPORTS: "sports",
-  };
+  const FilterTypeButtons = (
+    
+      <ul className="filter-options">
+        {Object.values(Filters).map(
+          (category) =>
+            category !== "none" && (
+              <button
+                className="filter-button"
+                type="button"
+                onClick={() => handleOptions(category)}
+              >
+                {category}
+              </button>
+            ),
+        )}
+      </ul>
+    
+  );
 
   const handleDropDown = () => {
     if (openDropDown) {
-      // we are going to close it
-      setOpenSuboptions((prev) => ({ ...prev, isRecent: false })); // close this to
-      setOpenSuboptions((prev) => ({ ...prev, isCategory: false })); // close this to
+      setOpenSuboptions((prev) => ({
+        ...prev,
+        isRecent: false,
+        isCategory: false,
+      })); // close this to
     }
     setOpenDropDown(!openDropDown);
   };
@@ -58,69 +85,48 @@ const FilterDropDown = ({ setFilterOption }) => {
     }
   };
 
-  const handleSubOptions = (category) => {
-    if (Object.values(Categories).includes(category)) {
-      // if this is a category that we are sorting by
-      setFilterOption("category:" + category); // marker for the exact route filter --> category --> suboption
-    } else if (Object.values(RecentOptions).includes(category)) {
-      // sort of implied
-      setFilterOption("recent:" + category); // marker for the exact route filter --> recent --> suboption
-    }
-  };
-
-  return (
-    <div className="filter-dropdown">
+  const filterButtons = (
+    <>
       <button className="handleDropdown" type="button" onClick={handleDropDown}>
         Filter
       </button>
       <button
         className="handleDropdown"
         type="button"
-        onClick={() => setFilterOption("clear")}
+        onClick={() => setFilterOption(Filters.NONE)}
       >
         Clear Filters
       </button>
-      {openDropDown ? (
-        <ul className="filter-options">
-          {Object.values(FilterCategories).map((category) => (
-            <button
-              className="filter-button"
-              type="button"
-              onClick={() => handleOptions(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </ul>
-      ) : null}
+    </>
+  );
 
-      {openSubOptions.isCategory ? (
-        <ul className="filter-options">
-          {Object.values(Categories).map((category) => (
-            <button
-              className="filter-button"
-              type="button"
-              onClick={() => handleSubOptions(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </ul>
-      ) : null}
+  const SubFilterTypeButtons = (filter) => {
+    return (
+      <ul className="filter-options">
+        {Object.values(getFilter(filter)).map(
+          (category) =>
+            category !== "none" && (
+              <button
+                className="filter-button"
+                type="button"
+                onClick={setFilterOption(category)}
+              >
+                {category}
+              </button>
+            ),
+        )}
+      </ul>
+    );
+  };
 
-      {openSubOptions.isRecent ? (
-        <ul className="filter-options">
-          {Object.values(RecentOptions).map((category) => (
-            <button
-              className="filter-button"
-              type="button"
-              onClick={() => handleSubOptions(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </ul>
-      ) : null}
+  return (
+    <div className="filter-dropdown">
+      {filterButtons}
+      {openDropDown ? FilterTypeButtons : null}
+      {openSubOptions.isCategory
+        ? SubFilterTypeButtons(Filters.CATEGORY)
+        : null}
+      {openSubOptions.isRecent ? SubFilterTypeButtons(Filters.RECENT) : null}
     </div>
   );
 };

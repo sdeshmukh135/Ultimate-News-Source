@@ -1,5 +1,5 @@
 import "../styles/News.css";
-import DefaultNewsImage from "/src/assets/default-news.png"; 
+import DefaultNewsImage from "/src/assets/default-news.png";
 
 const NewsComponent = ({ article }) => {
   return (
