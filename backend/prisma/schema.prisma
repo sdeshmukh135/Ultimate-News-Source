@@ -17,27 +17,14 @@ model User {
   id       Int    @id @default(autoincrement())
   username String @unique
   password String
-  news News[]
 }
 
 model News {
  id       Int    @id @default(autoincrement())
  name String
- releaseDate String
+ releaseDate String?
  category String[]
  articleURL String
  imageURL String?
- articles Article[]
- userId Int
- user User @relation(fields: [userId], references:[id])
-}
-
-model Article {
-  id       Int    @id @default(autoincrement())
-  name String
-  releaseDate String
-  tags String[]
-  region String
-  newsId Int
-  news News @relation(fields: [newsId], references:[id])
+ releasedAt DateTime
 }

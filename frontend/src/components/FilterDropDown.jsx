@@ -17,7 +17,6 @@ const FilterDropDown = ({ setFilterOption }) => {
           SubFilters.LAST_WEEK,
           SubFilters.LAST_YEAR,
         ];
-      case Filters.REGION:
       case Filters.CATEGORY:
         return [
           SubFilters.NONE,
@@ -32,29 +31,27 @@ const FilterDropDown = ({ setFilterOption }) => {
           SubFilters.TECH,
           SubFilters.TRAVEL,
         ];
+      case Filters.REGION:
       case Filters.SENTIMENT:
       case Filters.NONE:
-        return []; // don't open any dropdown
     }
   };
 
   const FilterTypeButtons = (
-    
-      <ul className="filter-options">
-        {Object.values(Filters).map(
-          (category) =>
-            category !== "none" && (
-              <button
-                className="filter-button"
-                type="button"
-                onClick={() => handleOptions(category)}
-              >
-                {category}
-              </button>
-            ),
-        )}
-      </ul>
-    
+    <ul className="filter-options">
+      {Object.values(Filters).map(
+        (category) =>
+          category !== "none" && (
+            <button
+              className="filter-button"
+              type="button"
+              onClick={() => handleOptions(category)}
+            >
+              {category}
+            </button>
+          ),
+      )}
+    </ul>
   );
 
   const handleDropDown = () => {
@@ -109,7 +106,7 @@ const FilterDropDown = ({ setFilterOption }) => {
               <button
                 className="filter-button"
                 type="button"
-                onClick={setFilterOption(category)}
+                onClick={() => setFilterOption(category)}
               >
                 {category}
               </button>

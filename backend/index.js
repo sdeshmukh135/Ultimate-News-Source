@@ -1,13 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
+const schedule = require("node-schedule");
+
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
-const articleRoutes = require("./routes/articles");
 
 app.use(express.json());
 
@@ -42,8 +45,49 @@ app.use((err, req, res, next) => {
 app.use(session(sessionConfig));
 app.use(authRoutes);
 app.use("/news", newsRoutes);
-app.use(articleRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+// seed the data (update the database everyday at midnight)
+const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
+  console.log("Updating database"); // confirmation that the function ran
+
+  try {
+    const newsData = [];
+    const apiToken = process.env.API_TOKEN;
+
+    let pageCount = 1; // make sure you don't have duplicate news
+
+    for (let i = 0; i < 70; i++) {
+      // in order to get 210 total articles at once (3 articles per request)
+      const response = await fetch(
+        ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`,
+      );
+      const data = await response.json();
+      const articles = data.data;
+
+      for (const article of articles) {
+        const publishedDate = new Date(article.published_at);
+        const newArticle = {
+          name: article.title,
+          category: article.categories,
+          articleURL: article.url,
+          imageURL: article.image_url === "" ? null : article.image_url,
+          releasedAt: publishedDate,
+        };
+
+        newsData.push(newArticle);
+      }
+
+      pageCount++;
+    }
+
+    const newNews = await prisma.news.createMany({
+      data: newsData,
+    });
+  } catch (error) {
+    console.log("Error in updating database");
+  }
 });
