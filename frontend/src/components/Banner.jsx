@@ -1,4 +1,5 @@
 import FilterDropDown from "../components/FilterDropDown.jsx";
+import "../styles/Banner.css"
 
 const Banner = ({ setFilterOption }) => {
   // ONLY visible to those logged in
