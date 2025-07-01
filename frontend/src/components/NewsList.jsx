@@ -1,11 +1,13 @@
 import NewsComponent from "./NewsComponent";
+import ArticleModal  from "./ArticleModal";
 import "../styles/News.css";
 
-const NewsList = ({ newsData }) => {
+const NewsList = (props) => {
   return (
     <div className="news-list">
-      {newsData.map((article) => {
-        return <NewsComponent article={article} />;
+      {props.articleModalData && <ArticleModal articleModalData={props.articleModalData} setArticleModalData={props.setArticleModalData}/>}
+      {props.newsData.map((article) => {
+        return <NewsComponent article={article} setArticleModalData={props.setArticleModalData}/>
       })}
     </div>
   );

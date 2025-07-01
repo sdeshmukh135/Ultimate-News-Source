@@ -5,6 +5,7 @@ import NewsList from "./NewsList";
 const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
   const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
+  const [articleModalData, setArticleModalData] = useState("") ; // for the article data (just the article link for now)
 
   const fetchNewsURL = `http://localhost:3000/news`; // default URL for general news
 
@@ -43,7 +44,7 @@ const HomePage = () => {
   return (
     <div className="HomePage">
       <Banner setFilterOption={setFilterOption} />
-      {newsData && <NewsList newsData={newsData} />}
+      {newsData && <NewsList newsData={newsData} articleModalData={articleModalData} setArticleModalData={setArticleModalData}/>}
     </div>
   );
 };

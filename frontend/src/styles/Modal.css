@@ -1,0 +1,24 @@
+.modal-overlay {
+   display:flex;
+   position: fixed; /* Stay in place */
+   z-index: 1; /* Sit on top */
+   left: 0;
+   top: 0;
+   width: 100%; /* Full width */
+   height: 100%; /* Full height */
+   overflow: auto; /* Enable scroll if needed */
+   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+  background-color:	#eeeeee;
+   margin: 5% auto; /* 15% from the top and centered */
+   padding: 10px;
+   border: 1px solid #9e0b0f;
+   border-radius:5%;
+   max-width: 60%;
+   color:	#000000;
+   font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+   max-height:auto;
+   overflow-y: auto;
+}

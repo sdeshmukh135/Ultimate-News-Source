@@ -29,9 +29,9 @@ const RecentFilters = {
 router.get("/", async (req, res) => {
   try {
     const news = await prisma.news.findMany({
-        orderBy: {
-            releasedAt : 'desc',
-        }
+      orderBy: {
+        releasedAt: "desc",
+      },
     });
 
     res.json(news);
@@ -45,7 +45,7 @@ router.post("/seed-news", async (req, res) => {
   const newsData = [];
   const apiToken = process.env.API_TOKEN;
 
-  let pageCount = 1; 
+  let pageCount = 1;
 
   for (let i = 0; i < 40; i++) {
     // in order to get 120 total articles at once (3 articles per loop)
@@ -62,7 +62,7 @@ router.post("/seed-news", async (req, res) => {
         category: article.categories,
         articleURL: article.url,
         imageURL: article.image_url === "" ? null : article.image_url,
-        releasedAt:publishedDate,
+        releasedAt: publishedDate,
       };
 
       newsData.push(newArticle);
@@ -93,9 +93,9 @@ router.get("/filter-news/:type", async (req, res) => {
             has: chosenFilter,
           },
         },
-        orderBy : {
-            releasedAt: "desc",
-        }
+        orderBy: {
+          releasedAt: "desc",
+        },
       });
     } else if (Object.values(RecentFilters).includes(req.params.type)) {
       // TO-DO: Update when more data is added to database
@@ -106,9 +106,9 @@ router.get("/filter-news/:type", async (req, res) => {
     } else {
       // last option "none" --> fetch original data
       filteredNews = await prisma.news.findMany({
-        orderBy : {
-            releasedAt: "desc",
-        }
+        orderBy: {
+          releasedAt: "desc",
+        },
       });
     }
 
@@ -126,18 +126,20 @@ router.put("/update-news", async (req, res) => {
   const newsData = await prisma.news.findMany();
   const updatedDates = newsData.map(async (newsData) => {
     const updatedReleaseDate = new Date(newsData.releaseDate);
-    console.log(updatedReleaseDate)
+    console.log(updatedReleaseDate);
     return prisma.news.update({
-        where: {id : newsData.id},
-        data : {
-            releasedAt:updatedReleaseDate,
-        }
-    })
-  })
+      where: { id: newsData.id },
+      data: {
+        releasedAt: updatedReleaseDate,
+      },
+    });
+  });
 
   const newsUpdatedData = await prisma.news.findMany();
   res.status(201).json(newsUpdatedData);
 });
+
+
 
 // for testing purposes
 router.post("/add-news", async (req, res) => {
