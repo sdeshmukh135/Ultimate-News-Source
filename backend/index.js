@@ -9,6 +9,8 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const requests = 70; 
+
 const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
 
@@ -60,7 +62,7 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
 
     let pageCount = 1; // make sure you don't have duplicate news
 
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < requests; i++) {
       // in order to get 210 total articles at once (3 articles per request)
       const response = await fetch(
         ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`,
