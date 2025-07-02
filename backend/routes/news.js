@@ -3,6 +3,7 @@ const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const requests = 10;
 
 // enums
 const Categories = {
@@ -47,7 +48,7 @@ router.post("/seed-news", async (req, res) => {
 
   let pageCount = 1;
 
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < requests; i++) {
     // in order to get 120 total articles at once (3 articles per loop)
     const response = await fetch(
       ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`,
@@ -140,7 +141,6 @@ router.put("/update-news", async (req, res) => {
 });
 
 
-
 // for testing purposes
 router.post("/add-news", async (req, res) => {
   // add a news to the news database
@@ -163,5 +163,51 @@ router.post("/add-news", async (req, res) => {
 
   res.status(201).json(news);
 });
+
+// to delete duplicate news (due to API problems)
+router.delete("/delete-dup", async(req, res) => {
+    // find duplicate records
+    const duplicates = await prisma.news.groupBy({
+        by: ['articleURL', 'name'],
+        _count: {
+            id : true
+        },
+        having : {
+            id : {
+                _count : {
+                    gt:1, // filter for records with more than one version (every record should be unique)
+                }
+            }
+        }
+    })
+
+    // delete duplicates
+    for (const duplicate of duplicates) {
+        const matches = await prisma.news.findMany({
+            where : {
+                articleURL:duplicate.articleURL,
+                name: duplicate.name,
+            },
+            skip:1,
+        })
+
+        // ids of records to delete
+        const ids  = matches.map((news) => (news.id));
+
+        // delete
+        if (ids.length > 0) {
+            await prisma.news.deleteMany({
+                where : {
+                    id : {
+                        in:ids
+                    }
+                }
+            })
+        }
+    }
+
+    res.status(201).json({message: "Duplicates Deleted Successfully!"});
+})
+
 
 module.exports = router;

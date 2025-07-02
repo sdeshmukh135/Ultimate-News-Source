@@ -1,17 +1,13 @@
 import "../styles/Modal.css"
+import Whiteboard from "./Whiteboard.jsx"
 
 const ArticleModal = (props) => {
 
-    const parseArticleData = (url) => {
-        return (
-            <iframe
-            src={url}
-            width="800"
-            height="600"
-            title="Embedded"
-        ></iframe>
-        )
-    }
+
+  const openArticle = () => {
+    const url = props.articleModalData;
+    window.open(url, '_blank')
+  }
   
   const closeModal = () => {
     props.setArticleModalData("");
@@ -20,7 +16,9 @@ const ArticleModal = (props) => {
   return (
     <div className="modal-overlay" onClick={closeModal}>
         <div className="modal-content" onClick={element => element.stopPropagation()}>
-            {parseArticleData(props.articleModalData)}
+            <h2>Notes</h2>
+            <button className="articleButton" onClick={openArticle}>Article</button>
+            <Whiteboard />
         </div>
     </div>
   )
