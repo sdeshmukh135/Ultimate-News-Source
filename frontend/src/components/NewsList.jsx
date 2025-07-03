@@ -1,13 +1,26 @@
 import NewsComponent from "./NewsComponent";
-import ArticleModal  from "./ArticleModal";
+import ArticleModal from "./ArticleModal";
+import { useState } from "react";
 import "../styles/News.css";
 
-const NewsList = (props) => {
+const NewsList = ({ newsData }) => {
+  const [articleModalData, setArticleModalData] = useState(""); // for the article data (just the article link for now)
+
   return (
     <div className="news-list">
-      {props.articleModalData && <ArticleModal articleModalData={props.articleModalData} setArticleModalData={props.setArticleModalData}/>}
-      {props.newsData.map((article) => {
-        return <NewsComponent article={article} setArticleModalData={props.setArticleModalData}/>
+      {articleModalData && (
+        <ArticleModal
+          articleModalData={articleModalData}
+          setArticleModalData={setArticleModalData}
+        />
+      )}
+      {newsData.map((article) => {
+        return (
+          <NewsComponent
+            article={article}
+            setArticleModalData={setArticleModalData}
+          />
+        );
       })}
     </div>
   );

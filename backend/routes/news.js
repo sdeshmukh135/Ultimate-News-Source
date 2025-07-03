@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const requests = 10;
+const MAX_REQUESTS_PER_API_LIMIT = 10;
 
 // enums
 const Categories = {
@@ -24,6 +24,18 @@ const RecentFilters = {
   LAST_WEEK: "last week",
   LAST_YEAR: "last year",
   GENERAL: "general",
+};
+
+const featuredNews = {
+  // news that the user should always see
+  SUPREME_COURT: "Supreme Court",
+  ELECTION: "Election",
+  HEALTH_POLICY: "Health Policy",
+  ECONOMY: "Economy",
+  EDUCATION: "Education",
+  GLOBAL_CRISIS: "Global Crisis",
+  STOCK: "Stock",
+  SENATE: "Senate",
 };
 
 // get all news for a specific user
@@ -48,7 +60,7 @@ router.post("/seed-news", async (req, res) => {
 
   let pageCount = 1;
 
-  for (let i = 0; i < requests; i++) {
+  for (let i = 0; i < MAX_REQUESTS_PER_API_LIMIT; i++) {
     // in order to get 120 total articles at once (3 articles per loop)
     const response = await fetch(
       ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`,
@@ -127,7 +139,6 @@ router.put("/update-news", async (req, res) => {
   const newsData = await prisma.news.findMany();
   const updatedDates = newsData.map(async (newsData) => {
     const updatedReleaseDate = new Date(newsData.releaseDate);
-    console.log(updatedReleaseDate);
     return prisma.news.update({
       where: { id: newsData.id },
       data: {
@@ -139,7 +150,6 @@ router.put("/update-news", async (req, res) => {
   const newsUpdatedData = await prisma.news.findMany();
   res.status(201).json(newsUpdatedData);
 });
-
 
 // for testing purposes
 router.post("/add-news", async (req, res) => {
@@ -165,49 +175,48 @@ router.post("/add-news", async (req, res) => {
 });
 
 // to delete duplicate news (due to API problems)
-router.delete("/delete-dup", async(req, res) => {
-    // find duplicate records
-    const duplicates = await prisma.news.groupBy({
-        by: ['articleURL', 'name'],
+router.delete("/delete-dup", async (req, res) => {
+  // find duplicate records
+  const duplicates = await prisma.news.groupBy({
+    by: ["articleURL", "name"],
+    _count: {
+      id: true,
+    },
+    having: {
+      id: {
         _count: {
-            id : true
+          gt: 1, // filter for records with more than one version (every record should be unique)
         },
-        having : {
-            id : {
-                _count : {
-                    gt:1, // filter for records with more than one version (every record should be unique)
-                }
-            }
-        }
-    })
+      },
+    },
+  });
 
-    // delete duplicates
-    for (const duplicate of duplicates) {
-        const matches = await prisma.news.findMany({
-            where : {
-                articleURL:duplicate.articleURL,
-                name: duplicate.name,
-            },
-            skip:1,
-        })
+  // delete duplicates
+  for (const duplicate of duplicates) {
+    const matches = await prisma.news.findMany({
+      where: {
+        articleURL: duplicate.articleURL,
+        name: duplicate.name,
+      },
+      skip: 1,
+    });
 
-        // ids of records to delete
-        const ids  = matches.map((news) => (news.id));
+    // ids of records to delete
+    const ids = matches.map((news) => news.id);
 
-        // delete
-        if (ids.length > 0) {
-            await prisma.news.deleteMany({
-                where : {
-                    id : {
-                        in:ids
-                    }
-                }
-            })
-        }
+    // delete
+    if (ids.length > 0) {
+      await prisma.news.deleteMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+      });
     }
+  }
 
-    res.status(201).json({message: "Duplicates Deleted Successfully!"});
-})
-
+  res.status(201).json({ message: "Duplicates Deleted Successfully!" });
+});
 
 module.exports = router;

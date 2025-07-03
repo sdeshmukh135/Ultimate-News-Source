@@ -9,10 +9,11 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const requests = 70; 
+const MAX_REQUESTS_PER_API_LIMIT = 50;
 
 const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
+const stockRoutes = require("./routes/stock");
 
 app.use(express.json());
 
@@ -47,6 +48,7 @@ app.use((err, req, res, next) => {
 app.use(session(sessionConfig));
 app.use(authRoutes);
 app.use("/news", newsRoutes);
+app.use("/stocks", stockRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
@@ -62,7 +64,7 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
 
     let pageCount = 1; // make sure you don't have duplicate news
 
-    for (let i = 0; i < requests; i++) {
+    for (let i = 0; i < MAX_REQUESTS_PER_API_LIMIT; i++) {
       // in order to get 210 total articles at once (3 articles per request)
       const response = await fetch(
         ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`,
