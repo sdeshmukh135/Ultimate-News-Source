@@ -1,0 +1,13 @@
+.stocks-container {
+  display: flex;
+  margin: 0px;
+  justify-content: space-evenly;
+}
+
+.stockLoss {
+  color: red;
+}
+
+.stockGain {
+  color: green;
+}

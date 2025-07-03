@@ -1,11 +1,10 @@
 import "../styles/News.css";
 import DefaultNewsImage from "/src/assets/default-news.png";
 
-const NewsComponent = ({article, setArticleModalData}) => {
-
-    const openModal = () => {
-        setArticleModalData(article.articleURL); // just so the modal appears on the screen
-    }
+const NewsComponent = ({ article, setArticleModalData }) => {
+  const openModal = () => {
+    setArticleModalData(article.articleURL); // just so the modal appears on the screen
+  };
 
   return (
     <div className="newsComponent" onClick={openModal}>

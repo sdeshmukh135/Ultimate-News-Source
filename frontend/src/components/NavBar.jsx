@@ -26,7 +26,15 @@ const NavBar = () => {
 
   return (
     <nav>
-      <header>Veritas</header>
+      <div className="pagelinks">
+        <Link to="/news">
+          <header>Veritas</header>
+        </Link>
+
+        <Link to="/featured">
+          <header>Featured</header>
+        </Link>
+      </div>
 
       <div className="auth-links">
         {user ? (

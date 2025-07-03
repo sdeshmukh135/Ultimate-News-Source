@@ -19,6 +19,15 @@ model User {
   password String
 }
 
+model Stock {
+  id       Int    @id @default(autoincrement())
+  date String
+  name String
+  low String
+  diffPercent String
+  isPositive Boolean
+}
+
 model News {
  id       Int    @id @default(autoincrement())
  name String
