@@ -26,27 +26,28 @@ router.get("/", async (req, res) => {
 // add today's stocks to the database (replace previous entires)
 router.get("/add-stocks", async (req, res) => {
   // before deleting, check to make sure that we really do need new data (don't want to unncessarily call the API)
-  const oldStocks = await prisma.stock.findMany();
-  const currentDay = new Date().toISOString().slice(0, 10);
+  let currentDay = new Date();
+  currentDay.setHours(currentDay.getHours() - 4); // to account for timezones (must match UTC)
+  currentDay = currentDay.toISOString().slice(0, 10);
+  const oldStocks = await prisma.stock.findMany({
+    where: {
+      lastUpdated: currentDay,
+    },
+  });
 
   if (oldStocks.length != 0) {
-    // if there are previous stocks
-    if (oldStocks[0].date === currentDay) {
-      return res.status(201).json(oldStocks); // break out of the function
-    }
+    // if there stocks of that day
+    return res.status(201).json(oldStocks); // break out of the function
   }
-
-  await prisma.stock.deleteMany(); // delete whatever was in the database to begin with to add the new data (if necessary)
 
   const apiKey = process.env.STOCK_API_KEY;
   const stockArr = [];
   for (const stock of Object.values(stockTypes)) {
     try {
       const response = await fetch(
-        `https://api.twelvedata.com/time_series?symbol=${stock}&interval=1day&apikey=${apiKey}&source=docs`,
+        `https://api.twelvedata.com/time_series?symbol=${stock}&interval=1day&time=UTC&apikey=${apiKey}&source=docs`,
       );
       const data = await response.json();
-
       // process the response
       const low = data["values"][0].low;
       const difference =
@@ -55,15 +56,38 @@ router.get("/add-stocks", async (req, res) => {
           parseFloat(data["values"][0].open)) *
         100; // for the percentage differnce
       const date = data["values"][0]["datetime"];
-      const isPositive = difference >= 0 ? true : false; // whether or not there is a drop in the stock price
-      const newStock = {
-        date: date,
-        name: stock,
-        low: low,
-        diffPercent: difference.toString(),
-        isPositive: isPositive,
-      };
-      stockArr.push(newStock);
+      const isPositive = difference >= 0; // whether or not there is a drop in the stock price
+
+      // check to see if this is a repeat (stock market is closed this day)
+      const isRepeatStock = await prisma.stock.findFirst({
+        where: {
+          date: date,
+          name: stock,
+        },
+      });
+
+      if (isRepeatStock) {
+        // it already exisits
+        await prisma.stock.update({
+          where: {
+            id: isRepeatStock.id,
+          },
+          data: {
+            lastUpdated: currentDay,
+          },
+        });
+      } else {
+        const newStock = {
+          date: date,
+          lastUpdated: currentDay,
+          name: stock,
+          low: low,
+          diffPercent: difference.toString(),
+          isPositive: isPositive,
+        };
+
+        stockArr.push(newStock);
+      }
     } catch (error) {
       console.log("Error Fetching Stock Data");
     }
@@ -74,7 +98,9 @@ router.get("/add-stocks", async (req, res) => {
     data: stockArr,
   });
 
-  const stocks = await prisma.stock.findMany();
+  const stocks = await prisma.stock.findMany({
+    where: { lastUpdated: currentDay },
+  });
 
   res.status(201).json(stocks);
 });
