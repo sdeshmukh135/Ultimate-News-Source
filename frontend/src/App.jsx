@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useUser } from "./contexts/UserContext";
 import SignUp from "./components/SignUp.jsx";
 import Login from "./components/Login.jsx";

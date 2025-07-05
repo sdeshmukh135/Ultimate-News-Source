@@ -26,18 +26,6 @@ const RecentFilters = {
   GENERAL: "general",
 };
 
-const featuredNews = {
-  // news that the user should always see
-  SUPREME_COURT: "Supreme Court",
-  ELECTION: "Election",
-  HEALTH_POLICY: "Health Policy",
-  ECONOMY: "Economy",
-  EDUCATION: "Education",
-  GLOBAL_CRISIS: "Global Crisis",
-  STOCK: "Stock",
-  SENATE: "Senate",
-};
-
 // get all news for a specific user
 router.get("/", async (req, res) => {
   try {
@@ -127,7 +115,6 @@ router.get("/filter-news/:type", async (req, res) => {
 
     res.status(201).json(filteredNews);
   } catch (error) {
-    console.log("error ", error);
     res.json({ error: "Something went wrong with filtering" });
   }
 });

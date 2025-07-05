@@ -14,6 +14,7 @@ const MAX_REQUESTS_PER_API_LIMIT = 50;
 const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
 const stockRoutes = require("./routes/stock");
+const featureRoutes = require("./routes/feature");
 
 app.use(express.json());
 
@@ -49,6 +50,7 @@ app.use(session(sessionConfig));
 app.use(authRoutes);
 app.use("/news", newsRoutes);
 app.use("/stocks", stockRoutes);
+app.use("/featured", featureRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
