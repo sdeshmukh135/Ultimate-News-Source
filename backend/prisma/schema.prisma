@@ -17,6 +17,39 @@ model User {
   id       Int    @id @default(autoincrement())
   username String @unique
   password String
+  interactions UserInteraction[] // user interactions per article (signals)
+  userNews UserNewsCache[]
+  metaData UserNewsMetaData[]
+}
+
+model UserInteraction {
+  id       Int    @id @default(autoincrement())
+  isOpened Boolean
+  isLiked Boolean // to read later
+  isRead Boolean // clicked on "view article"
+  newsId Int
+  news News? @relation(fields : [newsId], references : [id]) 
+  userId Int
+  user User? @relation(fields : [userId], references : [id])
+}
+
+model UserNewsCache {
+  id       Int    @id @default(autoincrement())
+  userId Int
+  user User? @relation(fields : [userId], references : [id])
+  newsId Int
+  news News? @relation(fields : [newsId], references : [id]) 
+  score Float // engagement score
+}
+
+model UserNewsMetaData { // for UI components to save according to user (update accordingly)
+  id       Int    @id @default(autoincrement())
+  bookmarked Boolean
+  userId Int
+  user User? @relation(fields : [userId], references : [id])
+  newsId Int
+  news News? @relation(fields : [newsId], references : [id]) 
+
 }
 
 model Stock {
@@ -37,6 +70,10 @@ model News {
  articleURL String
  imageURL String?
  releasedAt DateTime
+ wantToRead Boolean? // to read later
+ interactions UserInteraction[]
+ userNewsCache UserNewsCache[]
+ metaData UserNewsMetaData[]
 }
 
 model Feature {

@@ -27,7 +27,7 @@ router.get("/", async (req, res) => {
 router.get("/add-stocks", async (req, res) => {
   // before deleting, check to make sure that we really do need new data (don't want to unncessarily call the API)
   let currentDay = new Date();
-  currentDay.setHours(currentDay.getHours() - 4); // to account for timezones (must match UTC)
+  currentDay.setHours(currentDay.getHours() - 8); // to account for timezones (must match UTC)
   currentDay = currentDay.toISOString().slice(0, 10);
   const oldStocks = await prisma.stock.findMany({
     where: {

@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const MAX_REQUESTS_PER_API_LIMIT = 10;
+const MAX_REQUESTS_PER_API_LIMIT = 40;
 
 // enums
 const Categories = {
@@ -44,7 +44,7 @@ router.get("/", async (req, res) => {
 // user does not access this, for testing purposes must run manually
 router.post("/seed-news", async (req, res) => {
   const newsData = [];
-  const apiToken = process.env.API_TOKEN;
+  const apiToken = process.env.API_KEY;
 
   let pageCount = 1;
 

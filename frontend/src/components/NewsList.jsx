@@ -17,7 +17,7 @@ const NewsList = ({ newsData }) => {
       {newsData.map((article) => {
         return (
           <NewsComponent
-            article={article}
+            article={article[0]}
             setArticleModalData={setArticleModalData}
           />
         );
