@@ -5,6 +5,27 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// enums
+const Categories = {
+  GENERAL: "general",
+  SCIENCE: "science",
+  SPORTS: "sports",
+  BUSINESS: "business",
+  HEALTH: "health",
+  ENTERTAINMENT: "entertainment",
+  TECH: "tech",
+  POLITICS: "politics",
+  FOOD: "food",
+  TRAVEL: "travel",
+};
+
+const RecentFilters = {
+  TODAY: "today",
+  LAST_WEEK: "last week",
+  LAST_YEAR: "last year",
+  GENERAL: "general",
+};
+
 // get user specific news
 router.get("/", async (req, res) => {
   try {
@@ -20,7 +41,9 @@ router.get("/", async (req, res) => {
           where: { id: article.newsId },
         });
 
-        personalNews.push(newArticle);
+        newArticle[0].score = article.score;
+
+        personalNews.push(newArticle[0]);
       }
       res.json(personalNews);
     } else {
@@ -31,6 +54,44 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/filter-news/:type", async (req, res) => {
+  const chosenFilter = req.params.type;
+  let filteredNews = [];
+  // filter news accordingly
+  try {
+    if (Object.values(Categories).includes(chosenFilter)) {
+      // this is a category filter
+      filteredNews = await prisma.userNewsCache.findMany({
+        where: {
+          category: {
+            has: chosenFilter,
+          },
+        },
+        orderBy: {
+          releasedAt: "desc",
+        },
+      });
+    } else if (Object.values(RecentFilters).includes(req.params.type)) {
+      // TO-DO: Update when more data is added to database
+    } else if (req.params.type === "region") {
+      // TO-DO: update after region tagging is complete
+    } else if (req.params.type === "sentiment") {
+      // TO-DO: sentiment--> update after tagging is complete
+    } else {
+      // last option "none" --> fetch original data
+      filteredNews = await prisma.userNewsCache.findMany({
+        orderBy: {
+          releasedAt: "desc",
+        },
+      });
+    }
+
+    res.status(201).json(filteredNews);
+  } catch (error) {
+    res.json({ error: "Something went wrong with filtering" });
+  }
+});
+
 // add news to cache (testing purposes, otherwise news is updated using engagement scores)
 router.post("/add-news", async (req, res) => {
   try {
@@ -38,7 +99,6 @@ router.post("/add-news", async (req, res) => {
       // for 30 news articles (random subset for testing purposes)
       take: 30,
     });
-    const personalNews = [];
     for (const article of someNews) {
       // creates 30 entries for
       const newNews = await prisma.userNewsCache.create({
@@ -48,8 +108,11 @@ router.post("/add-news", async (req, res) => {
           score: 0.0, // default
         },
       });
-      personalNews.push(newNews);
     }
+
+    const personalNews = await prisma.userNewsCache.findMany({
+      where: { userId: req.session.userId },
+    });
 
     res.status(201).json(personalNews);
   } catch (error) {

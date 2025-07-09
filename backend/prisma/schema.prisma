@@ -70,7 +70,6 @@ model News {
  articleURL String
  imageURL String?
  releasedAt DateTime
- wantToRead Boolean? // to read later
  interactions UserInteraction[]
  userNewsCache UserNewsCache[]
  metaData UserNewsMetaData[]
