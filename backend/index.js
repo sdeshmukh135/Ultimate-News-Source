@@ -9,14 +9,14 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const MAX_REQUESTS_PER_API_LIMIT = 50;
+const MAX_REQUESTS_PER_API_LIMIT = 30;
 
 const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
 const stockRoutes = require("./routes/stock");
 const featureRoutes = require("./routes/feature");
 const cacheRoutes = require("./routes/userNews");
-const metadataRoutes = require("./routes/metaData")
+const metadataRoutes = require("./routes/metaData");
 
 app.use(express.json());
 
@@ -62,7 +62,6 @@ app.listen(PORT, () => {
 
 // seed the data (update the database everyday at midnight)
 const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
-
   try {
     const newsData = [];
     const apiToken = process.env.API_TOKEN;

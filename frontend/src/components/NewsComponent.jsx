@@ -2,18 +2,62 @@ import "../styles/News.css";
 import DefaultNewsImage from "/src/assets/default-news.png";
 import EmptyBookMarkImage from "/src/assets/emptyBookmark.png";
 import FilledBookMarkImage from "/src/assets/filledBookmark.png";
-import { useState } from "react";
 
-const NewsComponent = ({ article, setArticleModalData }) => {
+const NewsComponent = ({
+  article,
+  setArticleModalData,
+  uiData,
+  setMetaData,
+}) => {
   const openModal = () => {
     setArticleModalData(article.articleURL); // just so the modal appears on the screen
   };
 
-  // TO-DO: Connect backend bookmarking to the frontend to mark the bookmarks and store in backend
+  const handleBookmark = (event) => {
+    event.stopPropagation();
+
+    // add change to database
+    fetch(`http://localhost:3000/metadata/${article.id}/bookmarked`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        isBookmarked: !uiData.bookmarked,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json(); 
+      })
+      .then((data) => {
+        setMetaData(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching bookmarks: ", error);
+      });
+  };
 
   return (
     <div className="newsComponent" onClick={openModal}>
-      <img className="readLater" src={EmptyBookMarkImage} alt={"Read Later"} />
+      {uiData.bookmarked ? (
+        <img
+          className="readLater"
+          src={FilledBookMarkImage}
+          alt={"Bookmarked"}
+          onClick={handleBookmark}
+        />
+      ) : (
+        <img
+          className="readLater"
+          src={EmptyBookMarkImage}
+          alt={"Not Bookmarked"}
+          onClick={handleBookmark}
+        />
+      )}
       <div className="newsContent">
         {article.imageURL ? (
           <img

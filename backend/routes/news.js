@@ -5,27 +5,6 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const MAX_REQUESTS_PER_API_LIMIT = 40;
 
-// enums
-const Categories = {
-  GENERAL: "general",
-  SCIENCE: "science",
-  SPORTS: "sports",
-  BUSINESS: "business",
-  HEALTH: "health",
-  ENTERTAINMENT: "entertainment",
-  TECH: "tech",
-  POLITICS: "politics",
-  FOOD: "food",
-  TRAVEL: "travel",
-};
-
-const RecentFilters = {
-  TODAY: "today",
-  LAST_WEEK: "last week",
-  LAST_YEAR: "last year",
-  GENERAL: "general",
-};
-
 // get all news for a specific user
 router.get("/", async (req, res) => {
   try {
@@ -79,44 +58,6 @@ router.post("/seed-news", async (req, res) => {
   const news = await prisma.news.findMany();
 
   res.status(201).json(news);
-});
-
-router.get("/filter-news/:type", async (req, res) => {
-  const chosenFilter = req.params.type;
-  let filteredNews = [];
-  // filter news accordingly
-  try {
-    if (Object.values(Categories).includes(chosenFilter)) {
-      // this is a category filter
-      filteredNews = await prisma.news.findMany({
-        where: {
-          category: {
-            has: chosenFilter,
-          },
-        },
-        orderBy: {
-          releasedAt: "desc",
-        },
-      });
-    } else if (Object.values(RecentFilters).includes(req.params.type)) {
-      // TO-DO: Update when more data is added to database
-    } else if (req.params.type === "region") {
-      // TO-DO: update after region tagging is complete
-    } else if (req.params.type === "sentiment") {
-      // TO-DO: sentiment--> update after tagging is complete
-    } else {
-      // last option "none" --> fetch original data
-      filteredNews = await prisma.news.findMany({
-        orderBy: {
-          releasedAt: "desc",
-        },
-      });
-    }
-
-    res.status(201).json(filteredNews);
-  } catch (error) {
-    res.json({ error: "Something went wrong with filtering" });
-  }
 });
 
 // update news (for changes to the schema, testing purposes)
