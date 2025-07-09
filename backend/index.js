@@ -15,6 +15,8 @@ const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
 const stockRoutes = require("./routes/stock");
 const featureRoutes = require("./routes/feature");
+const cacheRoutes = require("./routes/userNews");
+const metadataRoutes = require("./routes/metaData")
 
 app.use(express.json());
 
@@ -51,6 +53,8 @@ app.use(authRoutes);
 app.use("/news", newsRoutes);
 app.use("/stocks", stockRoutes);
 app.use("/featured", featureRoutes);
+app.use("/user-news", cacheRoutes);
+app.use("/metadata", metadataRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
@@ -58,7 +62,6 @@ app.listen(PORT, () => {
 
 // seed the data (update the database everyday at midnight)
 const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
-  console.log("Updating database"); // confirmation that the function ran
 
   try {
     const newsData = [];
