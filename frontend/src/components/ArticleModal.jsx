@@ -2,8 +2,13 @@ import "../styles/Modal.css";
 import Whiteboard from "./Whiteboard.jsx";
 
 const ArticleModal = (props) => {
+  const SignalTypes = {
+    READ: "read",
+  };
+
   const openArticle = () => {
-    const url = props.articleModalData;
+    const url = props.articleModalData.url;
+    props.handleSignalUpdates(props.articleModalData.id, SignalTypes.READ);
     window.open(url, "_blank");
   };
 

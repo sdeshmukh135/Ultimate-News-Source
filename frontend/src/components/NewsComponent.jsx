@@ -8,9 +8,23 @@ const NewsComponent = ({
   setArticleModalData,
   uiData,
   setMetaData,
+  handleSignalUpdates,
 }) => {
-  const openModal = () => {
-    setArticleModalData(article.articleURL); // just so the modal appears on the screen
+  // enums
+  const SignalTypes = {
+    OPEN: "open",
+    LIKED: "liked",
+  };
+
+  const openModal = (event) => {
+    event.stopPropagation();
+    const articleModalInfo = {
+      url: article.articleURL,
+      id: article.id,
+    };
+    setArticleModalData(articleModalInfo); // just so the modal appears on the screen
+    // add signal handling (update user interaction)
+    handleSignalUpdates(article.id, SignalTypes.OPEN);
   };
 
   const handleBookmark = (event) => {
@@ -22,6 +36,7 @@ const NewsComponent = ({
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        credentials: "include",
       },
       body: JSON.stringify({
         isBookmarked: !uiData.bookmarked,
@@ -31,7 +46,7 @@ const NewsComponent = ({
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json(); 
+        return response.json();
       })
       .then((data) => {
         setMetaData(data);
@@ -39,6 +54,8 @@ const NewsComponent = ({
       .catch((error) => {
         console.error("Error fetching bookmarks: ", error);
       });
+
+    handleSignalUpdates(article.id, SignalTypes.LIKED, !uiData.bookmarked);
   };
 
   return (
