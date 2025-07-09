@@ -24,9 +24,9 @@ model User {
 
 model UserInteraction {
   id       Int    @id @default(autoincrement())
-  isOpened Boolean
+  openCount Int
   isLiked Boolean // to read later
-  isRead Boolean // clicked on "view article"
+  readCount Int // clicked on "view article"
   newsId Int
   news News? @relation(fields : [newsId], references : [id]) 
   userId Int
