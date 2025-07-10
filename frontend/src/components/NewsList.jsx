@@ -3,7 +3,7 @@ import ArticleModal from "./ArticleModal";
 import { useState } from "react";
 import "../styles/News.css";
 
-const NewsList = ({ newsData, metaData, setMetaData }) => {
+const NewsList = ({ newsData, setNewsData }) => {
   const [articleModalData, setArticleModalData] = useState(""); // for the article data (just the article link for now)
 
   const handleSignalUpdates = (id, signal, liked) => {
@@ -39,18 +39,11 @@ const NewsList = ({ newsData, metaData, setMetaData }) => {
         />
       )}
       {newsData.map((article) => {
-        let uiData = null;
-        for (const data of metaData) {
-          if (data.newsId === article.id) {
-            uiData = data;
-          }
-        }
         return (
           <NewsComponent
             article={article}
+            setNewsData={setNewsData}
             setArticleModalData={setArticleModalData}
-            uiData={uiData}
-            setMetaData={setMetaData}
             handleSignalUpdates={handleSignalUpdates}
           />
         );

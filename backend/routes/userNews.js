@@ -31,6 +31,9 @@ router.get("/", async (req, res) => {
   try {
     const newNews = await prisma.userNewsCache.findMany({
       where: { userId: req.session.userId },
+      orderBy: {
+        id: "desc",
+      },
     });
 
     if (newNews.length != 0) {
@@ -42,6 +45,7 @@ router.get("/", async (req, res) => {
         });
 
         newArticle[0].score = article.score;
+        newArticle[0].bookmarked = article.bookmarked;
 
         personalNews.push(newArticle[0]);
       }
@@ -105,6 +109,7 @@ router.post("/add-news", async (req, res) => {
         data: {
           user: { connect: { id: req.session.userId } },
           news: { connect: { id: article.id } }, // news id
+          bookmarked: false, // initially
           score: 0.0, // default
         },
       });
@@ -117,6 +122,48 @@ router.post("/add-news", async (req, res) => {
     res.status(201).json(personalNews);
   } catch (error) {
     res.status(500).json({ error: "Error in adding news to cache" });
+  }
+});
+
+router.put("/:newsId/bookmarked", async (req, res) => {
+  const { isBookmarked } = req.body;
+  const newsid = parseInt(req.params.newsId);
+  try {
+    const article = await prisma.userNewsCache.findMany({
+      where: { newsId: newsid },
+    });
+    if (article.length != 0) {
+      // the metadata already exists so we are modifying an existing entry
+      const updatedMetaData = await prisma.userNewsCache.update({
+        where: { id: article[0].id },
+        data: {
+          bookmarked: isBookmarked,
+        },
+      });
+    }
+
+    const newNews = await prisma.userNewsCache.findMany({
+      where: { userId: req.session.userId },
+      orderBy: {
+        id: "desc",
+      },
+    });
+
+    const personalNews = [];
+    // there are entries found
+    for (const art of newNews) {
+      const newArticle = await prisma.news.findMany({
+        where: { id: art.newsId },
+      });
+
+      newArticle[0].score = art.score;
+      newArticle[0].bookmarked = art.bookmarked;
+
+      personalNews.push(newArticle[0]);
+    }
+    res.json(personalNews);
+  } catch (error) {
+    res.status(500).json({ error: "Error updating metadata" });
   }
 });
 

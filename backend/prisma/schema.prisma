@@ -19,7 +19,6 @@ model User {
   password String
   interactions UserInteraction[] // user interactions per article (signals)
   userNews UserNewsCache[]
-  metaData UserNewsMetaData[]
 }
 
 model UserInteraction {
@@ -39,17 +38,8 @@ model UserNewsCache {
   user User? @relation(fields : [userId], references : [id])
   newsId Int
   news News? @relation(fields : [newsId], references : [id]) 
-  score Float // engagement score
-}
-
-model UserNewsMetaData { // for UI components to save according to user (update accordingly)
-  id       Int    @id @default(autoincrement())
   bookmarked Boolean
-  userId Int
-  user User? @relation(fields : [userId], references : [id])
-  newsId Int
-  news News? @relation(fields : [newsId], references : [id]) 
-
+  score Float // engagement score
 }
 
 model Stock {
@@ -72,7 +62,6 @@ model News {
  releasedAt DateTime
  interactions UserInteraction[]
  userNewsCache UserNewsCache[]
- metaData UserNewsMetaData[]
 }
 
 model Feature {
