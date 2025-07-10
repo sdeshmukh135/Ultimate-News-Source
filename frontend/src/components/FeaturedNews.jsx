@@ -32,7 +32,7 @@ const FeaturedNews = ({ featuredData }) => {
           <img className="newsPic" src={DefaultNewsImage} alt={"Not Found"} />
         )}
         <h3>{data.name}</h3>
-        <h4>Release Date: {data.releasedAt.slice(0, 10)}</h4>
+        <h4>Release Date: {new Date(data.releasedAt).toDateString()}</h4>
       </div>
     );
   };

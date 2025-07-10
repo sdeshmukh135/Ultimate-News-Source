@@ -4,13 +4,11 @@ import NewsList from "./NewsList";
 
 const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
-  const [metaData, setMetaData] = useState(null); // for the UI components of the news for this specific user
   const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
   const fetchNewsURL = `http://localhost:3000/user-news`; // default URL for general news (but user-specific)
 
   useEffect(() => {
     fetchNews(fetchNewsURL);
-    fetchMetaData();
   }, []);
 
   useEffect(() => {
@@ -36,22 +34,6 @@ const HomePage = () => {
       });
   };
 
-  const fetchMetaData = () => {
-    fetch(`http://localhost:3000/metadata`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json(); // Parse JSON data from the response
-      })
-      .then((data) => {
-        setMetaData(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching news:", error);
-      });
-  };
-
   const filterData = () => {
     const filterURL = fetchNewsURL + `/filter-news/${filterOption}`;
     fetchNews(filterURL);
@@ -60,13 +42,7 @@ const HomePage = () => {
   return (
     <div className="HomePage">
       <Banner setFilterOption={setFilterOption} />
-      {newsData && metaData && (
-        <NewsList
-          newsData={newsData}
-          metaData={metaData}
-          setMetaData={setMetaData}
-        />
-      )}
+      {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} />}
     </div>
   );
 };

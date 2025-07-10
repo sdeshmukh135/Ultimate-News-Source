@@ -5,9 +5,8 @@ import FilledBookMarkImage from "/src/assets/filledBookmark.png";
 
 const NewsComponent = ({
   article,
+  setNewsData,
   setArticleModalData,
-  uiData,
-  setMetaData,
   handleSignalUpdates,
 }) => {
   // enums
@@ -31,7 +30,7 @@ const NewsComponent = ({
     event.stopPropagation();
 
     // add change to database
-    fetch(`http://localhost:3000/metadata/${article.id}/bookmarked`, {
+    fetch(`http://localhost:3000/user-news/${article.id}/bookmarked`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -39,7 +38,7 @@ const NewsComponent = ({
         credentials: "include",
       },
       body: JSON.stringify({
-        isBookmarked: !uiData.bookmarked,
+        isBookmarked: !article.bookmarked,
       }),
     })
       .then((response) => {
@@ -49,18 +48,25 @@ const NewsComponent = ({
         return response.json();
       })
       .then((data) => {
-        setMetaData(data);
+        setNewsData(data);
       })
       .catch((error) => {
         console.error("Error fetching bookmarks: ", error);
       });
 
-    handleSignalUpdates(article.id, SignalTypes.LIKED, !uiData.bookmarked);
+    handleSignalUpdates(article.id, SignalTypes.LIKED, !article.bookmarked);
+  };
+
+  const parseDate = (date) => {
+    const newDate = new Date(date);
+    newDate.setHours(newDate.getHours() - newDate.getTimezoneOffset() / 60);
+
+    return newDate.toDateString();
   };
 
   return (
     <div className="newsComponent" onClick={openModal}>
-      {uiData.bookmarked ? (
+      {article.bookmarked ? (
         <img
           className="readLater"
           src={FilledBookMarkImage}
@@ -90,7 +96,7 @@ const NewsComponent = ({
           <img className="newsPic" src={DefaultNewsImage} alt={"Not Found"} />
         )}
         <h3>{article.name}</h3>
-        <h4>Release Date: {article.releasedAt.slice(0, 10)}</h4>
+        <h4>Release Date: {parseDate(article.releasedAt)}</h4>
       </div>
     </div>
   );
