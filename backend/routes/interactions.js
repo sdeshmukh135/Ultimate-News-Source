@@ -4,6 +4,13 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// enum
+const WEIGHTS = {
+    READ : 3,
+    LIKED : 3,
+    OPEN : 4,
+}
+
 // get all user interactions
 router.get("/", async (req, res) => {
   const interactions = await prisma.userInteraction.findMany({
@@ -103,9 +110,9 @@ router.put("/update-scores", async (req, res) => {
         where: { newsId: interaction.newsId },
       });
 
-      const weightedLiked = interaction.isLiked ? 3.0 : 1.0;
-      const weightedOpen = interaction.openCount * 3; // 3 times whatever the number was
-      const weightedRead = interaction.readCount * 3;
+      const weightedLiked = interaction.isLiked ? WEIGHTS.LIKED : 1.0;
+      const weightedOpen = interaction.openCount * WEIGHTS.OPEN; // 3 times whatever the number was
+      const weightedRead = interaction.readCount * WEIGHTS.READ;
 
       const engagamentScore = weightedLiked + weightedOpen + weightedRead;
 

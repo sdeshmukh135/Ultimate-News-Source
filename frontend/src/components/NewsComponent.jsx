@@ -2,6 +2,7 @@ import "../styles/News.css";
 import DefaultNewsImage from "/src/assets/default-news.png";
 import EmptyBookMarkImage from "/src/assets/emptyBookmark.png";
 import FilledBookMarkImage from "/src/assets/filledBookmark.png";
+import {SIGNALS} from "../utils/utils"
 
 const NewsComponent = ({
   article,
@@ -9,11 +10,6 @@ const NewsComponent = ({
   setArticleModalData,
   handleSignalUpdates,
 }) => {
-  // enums
-  const SignalTypes = {
-    OPEN: "open",
-    LIKED: "liked",
-  };
 
   const openModal = (event) => {
     event.stopPropagation();
@@ -23,7 +19,7 @@ const NewsComponent = ({
     };
     setArticleModalData(articleModalInfo); // just so the modal appears on the screen
     // add signal handling (update user interaction)
-    handleSignalUpdates(article.id, SignalTypes.OPEN);
+    handleSignalUpdates(article.id, SIGNALS.OPEN);
   };
 
   const handleBookmark = (event) => {
@@ -54,7 +50,7 @@ const NewsComponent = ({
         console.error("Error fetching bookmarks: ", error);
       });
 
-    handleSignalUpdates(article.id, SignalTypes.LIKED, !article.bookmarked);
+    handleSignalUpdates(article.id, SIGNALS.LIKED, !article.bookmarked);
   };
 
   const parseDate = (date) => {
