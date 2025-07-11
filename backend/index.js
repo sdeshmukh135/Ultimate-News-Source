@@ -99,3 +99,6 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
     console.log("Error in updating database");
   }
 });
+
+// TO-DO: schedule job to change the user feed according to engagement scores (scheduled for midnight)
+
