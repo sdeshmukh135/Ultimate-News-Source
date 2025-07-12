@@ -2,7 +2,7 @@ import "../styles/News.css";
 import DefaultNewsImage from "/src/assets/default-news.png";
 import EmptyBookMarkImage from "/src/assets/emptyBookmark.png";
 import FilledBookMarkImage from "/src/assets/filledBookmark.png";
-import {SIGNALS} from "../utils/utils"
+import { SIGNALS } from "../utils/utils";
 
 const NewsComponent = ({
   article,
@@ -10,7 +10,6 @@ const NewsComponent = ({
   setArticleModalData,
   handleSignalUpdates,
 }) => {
-
   const openModal = (event) => {
     event.stopPropagation();
     const articleModalInfo = {
@@ -55,7 +54,7 @@ const NewsComponent = ({
 
   const parseDate = (date) => {
     const newDate = new Date(date);
-    newDate.setHours(newDate.getHours() - newDate.getTimezoneOffset() / 60);
+    newDate.setHours(newDate.getHours() + newDate.getTimezoneOffset() / 60);
 
     return newDate.toDateString();
   };

@@ -1,9 +1,8 @@
 import "../styles/Modal.css";
 import Whiteboard from "./Whiteboard.jsx";
-import {SIGNALS} from "../utils/utils.js"
+import { SIGNALS } from "../utils/utils.js";
 
 const ArticleModal = (props) => {
-
   const openArticle = () => {
     const url = props.articleModalData.url;
     props.handleSignalUpdates(props.articleModalData.id, SIGNALS.READ);
