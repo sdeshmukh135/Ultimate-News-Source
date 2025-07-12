@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const MAX_REQUESTS_PER_API_LIMIT = 30;
+const MAX_REQUESTS_PER_API_LIMIT = 40;
 
 const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
@@ -17,6 +17,7 @@ const stockRoutes = require("./routes/stock");
 const featureRoutes = require("./routes/feature");
 const cacheRoutes = require("./routes/userNews");
 const interactionRoutes = require("./routes/interactions");
+const rankingRoutes = require("./routes/rankings");
 
 app.use(express.json());
 
@@ -55,10 +56,9 @@ app.use("/stocks", stockRoutes);
 app.use("/featured", featureRoutes);
 app.use("/user-news", cacheRoutes);
 app.use("/interactions", interactionRoutes);
+app.use("/ranking", rankingRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => {});
 
 // seed the data (update the database everyday at midnight)
 const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
@@ -96,9 +96,6 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
       data: newsData,
     });
   } catch (error) {
-    console.log("Error in updating database");
+    console.error("Error in updating database");
   }
 });
-
-// TO-DO: schedule job to change the user feed according to engagement scores (scheduled for midnight)
-

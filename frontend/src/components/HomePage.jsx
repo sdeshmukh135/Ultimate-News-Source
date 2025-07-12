@@ -19,7 +19,11 @@ const HomePage = () => {
 
   const fetchNews = (url) => {
     // fetches the news for the HomePage
-    fetch(url)
+    fetch(url, {
+      headers: {
+        credentials: "include",
+      },
+    })
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -41,7 +45,7 @@ const HomePage = () => {
 
   return (
     <div className="HomePage">
-      <Banner setFilterOption={setFilterOption} />
+      <Banner setFilterOption={setFilterOption} setNewsData={setNewsData} />
       {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} />}
     </div>
   );

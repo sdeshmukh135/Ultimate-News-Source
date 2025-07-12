@@ -91,7 +91,7 @@ router.get("/add-stocks", async (req, res) => {
         stockArr.push(newStock);
       }
     } catch (error) {
-      console.log("Error Fetching Stock Data");
+      console.error("Error Fetching Stock Data");
     }
   }
 

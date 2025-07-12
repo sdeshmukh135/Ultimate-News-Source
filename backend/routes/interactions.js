@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 
 // enum
 const WEIGHTS = {
-    READ : 3,
-    LIKED : 3,
-    OPEN : 4,
-}
+  READ: 3,
+  LIKED: 3,
+  OPEN: 4,
+};
 
 // get all user interactions
 router.get("/", async (req, res) => {

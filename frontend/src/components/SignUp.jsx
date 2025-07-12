@@ -40,7 +40,7 @@ const SignUp = () => {
         });
       }
     } catch (error) {
-      console.log("error: ", error);
+      console.error("error: ", error);
       setOutputMessage({
         type: "error",
         text: data.error,

@@ -61,7 +61,6 @@ router.post("/signup", async (req, res) => {
 
     res.status(201).json({ message: "Signup Successful!" }); // must login in order to get to Home Page, do not need to return userId here
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Something went wrong with signing up" });
   }
 });
@@ -97,7 +96,6 @@ router.post("/login", async (req, res) => {
     req.session.username = oldUser.username;
     res.json({ id: oldUser.id, username: oldUser.username }); // returning userId and username of the session
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: "Something went wrong with the login" });
   }
 });
