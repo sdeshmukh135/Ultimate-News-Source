@@ -32,8 +32,8 @@ const Banner = ({ setFilterOption, setNewsData }) => {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        credentials: "include",
       },
+      credentials: "include",
     })
       .then((response) => {
         if (!response.ok) {

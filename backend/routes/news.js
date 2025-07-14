@@ -4,6 +4,8 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const { getUserNews } = require("../recommendation");
+
 const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
 
 const MAX_REQUESTS_PER_API_LIMIT = 40;
@@ -118,9 +120,9 @@ router.put("/update-tags", async (req, res) => {
 // update tags for the specific news when a user updates a specific tag
 router.put("/:newsId/update-tag", async (req, res) => {
   const newsid = req.params.newsId; // which news to update
-  const { tagToUpdate } = req.body;
+  const { addedInput, tagToUpdate } = req.body;
 
-  const article = await prisma.news.findMany({
+  const article = await prisma.news.findFirst({
     where: {
       id: parseInt(newsid),
     },
@@ -131,25 +133,44 @@ router.put("/:newsId/update-tag", async (req, res) => {
   if (tagToUpdate === "leftCount") {
     updatedArticle = await prisma.news.update({
       where: {
-        id: article[0].id,
+        id: article.id,
       },
       data: {
-        leftCount: article[0].leftCount + 1,
+        leftCount: article.leftCount + 1,
       },
     });
   } else if (tagToUpdate === "rightCount") {
     // ..implied
     updatedArticle = await prisma.news.update({
       where: {
-        id: article[0].id,
+        id: article.id,
       },
       data: {
-        rightCount: article[0].rightCount + 1,
+        rightCount: article.rightCount + 1,
       },
     });
   }
 
-  res.status(200).json(updatedArticle);
+  // update user input
+  const userArticle = await prisma.userNewsCache.findFirst({
+    where: {
+      userId: req.session.userId,
+      newsId: parseInt(newsid),
+    },
+  });
+
+  const updatedUserArticle = await prisma.userNewsCache.update({
+    where: {
+      id: userArticle.id,
+    },
+    data: {
+      addTagInput: addedInput,
+    },
+  });
+
+  const personalNews = await getUserNews(req);
+
+  res.status(200).json(personalNews);
 });
 
 // for testing purposes

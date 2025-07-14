@@ -1,15 +1,10 @@
 import "../styles/Modal.css";
 import Whiteboard from "./Whiteboard.jsx";
 import { SIGNALS } from "../utils/utils.js";
+import { TAGS } from "../utils/utils.js";
 import { useState } from "react";
 
 const ArticleModal = (props) => {
-  // tag options
-  const TAGS = {
-    LEFT: "leftCount",
-    RIGHT: "rightCount",
-  };
-
   const [answered, setAnswered] = useState(props.articleModalData.addTagInput); // if they have already contributed with tag input
 
   const openArticle = () => {
@@ -31,38 +26,10 @@ const ArticleModal = (props) => {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          credentials: "include",
         },
+        credentials: "include",
         body: JSON.stringify({
           tagToUpdate: tag,
-        }),
-      },
-    )
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .catch((error) => {
-        console.error("Error updating tags: ", error);
-      });
-
-    handleTagContribution();
-  };
-
-  const handleTagContribution = () => {
-    // handle user contribution to the tag
-    fetch(
-      `http://localhost:3000/user-news/${props.articleModalData.id}/tag-input`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          credentials: "include",
-        },
-        body: JSON.stringify({
           addedInput: true,
         }),
       },
@@ -78,7 +45,7 @@ const ArticleModal = (props) => {
         props.setNewsData(data);
       })
       .catch((error) => {
-        console.error("Error setting user input: ", error);
+        console.error("Error updating tags: ", error);
       });
   };
 

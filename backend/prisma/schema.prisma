@@ -67,6 +67,14 @@ model News {
  sentiment Json?
  interactions UserInteraction[]
  userNewsCache UserNewsCache[]
+ globalInteraction GlobalInteraction[]
+}
+
+model GlobalInteraction {
+  id       Int    @id @default(autoincrement())
+  openCount Int
+  newsId Int
+  news News @relation(fields : [newsId], references : [id])
 }
 
 model Ranking {

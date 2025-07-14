@@ -5,6 +5,12 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const {
+  getUserNews,
+  getRankings,
+  createPersonalizedNews,
+} = require("../recommendation");
+
 // enums
 const Categories = {
   GENERAL: "general",
@@ -27,22 +33,12 @@ const RecentFilters = {
 };
 
 const getSimiliarity = (userCategories, articleCategories) => {
-  let { intersection, union } = new Set();
+  let intersection = new Set(
+    [...articleCategories].filter((e) => userCategories.includes(e)),
+  ); // A N B
+  let union = new Set([...userCategories, ...articleCategories]); // A U B
 
-  if (articleCategories instanceof Array) {
-    intersection = new Set(
-      [...articleCategories].filter((e) => userCategories.includes(e)),
-    ); // A N B
-    union = new Set([...userCategories, ...articleCategories]); // A U B
-  } else {
-    // singular value
-    intersection = new Set(
-      [...userCategories].filter((e) => e === articleCategories),
-    ); // filter for specific instance
-    union = new Set([...userCategories, articleCategories]);
-  }
-
-  if (union === 0) {
+  if (intersection.length === 0) {
     // nothing common between the two...which shouldn't happen
     return 0;
   }
@@ -53,32 +49,8 @@ const getSimiliarity = (userCategories, articleCategories) => {
 // get user specific news
 router.get("/", async (req, res) => {
   try {
-    const newNews = await prisma.userNewsCache.findMany({
-      where: { userId: req.session.userId },
-      orderBy: {
-        addedTime: "desc",
-      },
-      take: 30,
-    });
-
-    if (newNews.length != 0) {
-      const personalNews = [];
-      // there are entries found
-      for (const article of newNews) {
-        const newArticle = await prisma.news.findMany({
-          where: { id: article.newsId },
-        });
-
-        newArticle[0].score = article.score;
-        newArticle[0].bookmarked = article.bookmarked;
-        newArticle[0].addTagInput = article.addTagInput;
-
-        personalNews.push(newArticle[0]);
-      }
-      res.json(personalNews);
-    } else {
-      res.status(404).json("No articles found");
-    }
+    const personalNews = await getUserNews(req);
+    res.status(200).json(personalNews);
   } catch (error) {
     res.status(500).send("Server Error");
   }
@@ -173,39 +145,20 @@ router.put("/:newsId/bookmarked", async (req, res) => {
   const { isBookmarked } = req.body;
   const newsid = parseInt(req.params.newsId);
   try {
-    const article = await prisma.userNewsCache.findMany({
+    const article = await prisma.userNewsCache.findFirst({
       where: { newsId: newsid },
     });
-    if (article.length != 0) {
+    if (article != null) {
       // the metadata already exists so we are modifying an existing entry
       const updatedMetaData = await prisma.userNewsCache.update({
-        where: { id: article[0].id },
+        where: { id: article.id },
         data: {
           bookmarked: isBookmarked,
         },
       });
     }
 
-    const newNews = await prisma.userNewsCache.findMany({
-      where: { userId: req.session.userId },
-      orderBy: {
-        addedTime: "desc",
-      },
-      take: 30,
-    });
-
-    const personalNews = [];
-    // there are entries found
-    for (const art of newNews) {
-      const newArticle = await prisma.news.findMany({
-        where: { id: art.newsId },
-      });
-
-      newArticle[0].score = art.score;
-      newArticle[0].bookmarked = art.bookmarked;
-
-      personalNews.push(newArticle[0]);
-    }
+    const personalNews = await getUserNews(req);
 
     res.json(personalNews);
   } catch (error) {
@@ -225,15 +178,15 @@ router.post("/personalized", async (req, res) => {
   const personalNews = [];
   // there are entries found
   for (const art of newNews) {
-    const newArticle = await prisma.news.findMany({
+    const newArticle = await prisma.news.findFirst({
       where: { id: art.newsId },
     });
 
-    newArticle[0].score = art.score;
-    newArticle[0].bookmarked = art.bookmarked;
-    newArticle[0].addTagInput = art.addTagInput;
+    newArticle.score = art.score;
+    newArticle.bookmarked = art.bookmarked;
+    newArticle.addTagInput = art.addTagInput;
 
-    personalNews.push(newArticle[0]);
+    personalNews.push(newArticle);
   }
 
   try {
@@ -272,10 +225,9 @@ router.post("/personalized", async (req, res) => {
       }
 
       // for dates
-      similiarity = getSimiliarity(
-        publishDates,
+      similiarity = getSimiliarity(publishDates, [
         article.releasedAt.toDateString(),
-      );
+      ]);
       if (article.releasedAt.toDateString() in weightedDateScores) {
         weightedDateScores[article.releasedAt.toDateString()] += similiarity;
       } else {
@@ -284,7 +236,7 @@ router.post("/personalized", async (req, res) => {
 
       // for sources
       const URLString = new URL(article.articleURL).hostname;
-      similiarity = getSimiliarity(sources, URLString);
+      similiarity = getSimiliarity(sources, [URLString]);
       if (URLString in weightedSourcesScores) {
         weightedSourcesScores[URLString] += similiarity;
       } else {
@@ -299,35 +251,12 @@ router.post("/personalized", async (req, res) => {
       (article) => !usedNews.includes(article.id),
     ); // so that we are not looking at articles that have already been seen
 
-    let rankings = []; // json of the newsIds and the rankings
-    for (const article of notUsedNews) {
-      // calculate the score
-      let score = 0.0;
-      for (const category of article.category) {
-        if (weightedCategoryScores.hasOwnProperty(category)) {
-          // article has one of the weighted categories
-          score += weightedCategoryScores[category];
-        }
-      }
-
-      if (
-        weightedDateScores.hasOwnProperty(article.releasedAt.toDateString())
-      ) {
-        score += weightedDateScores[article.releasedAt.toDateString()];
-      }
-
-      const URLString = new URL(article.articleURL).hostname;
-      if (weightedSourcesScores.hasOwnProperty(URLString)) {
-        score += weightedSourcesScores[URLString];
-      }
-
-      const newRanking = {
-        newsId: article.id,
-        totalScore: score,
-      };
-
-      rankings.push(newRanking);
-    }
+    let rankings = await getRankings(
+      weightedDateScores,
+      weightedCategoryScores,
+      weightedSourcesScores,
+      notUsedNews,
+    ); // json of the newsIds and the rankings
 
     //delete previous ranking list
     await prisma.ranking.deleteMany({
@@ -338,7 +267,7 @@ router.post("/personalized", async (req, res) => {
       // add to ranking database
       const newRanking = await prisma.ranking.create({
         data: {
-          userId: 6,
+          userId: req.session.userId,
           newsId: ranking.newsId,
           rank: ranking.totalScore,
         },
@@ -347,7 +276,7 @@ router.post("/personalized", async (req, res) => {
 
     let sortedRankings = await prisma.ranking.findMany({
       where: {
-        userId: 6,
+        userId: req.session.userId,
       },
       orderBy: {
         rank: "desc",
@@ -356,43 +285,9 @@ router.post("/personalized", async (req, res) => {
     });
 
     sortedRankings = sortedRankings.map((ranking) => ranking.newsId);
+    await createPersonalizedNews(req, notUsedNews, sortedRankings);
 
-    const personalizedNews = [];
-    for (const a of notUsedNews) {
-      if (sortedRankings.includes(a.id)) {
-        // one of the top 30 closest matches
-        await prisma.userNewsCache.create({
-          data: {
-            user: { connect: { id: 6 } },
-            news: { connect: { id: a.id } }, // news id
-            bookmarked: false, // initially
-            score: 0.0, // default
-            addedTime: new Date(),
-            addTagInput: false,
-          },
-        });
-      }
-    }
-
-    const cacheNews = await prisma.userNewsCache.findMany({
-      where: { userId: req.session.userId },
-      orderBy: {
-        addedTime: "desc",
-      },
-      take: 30,
-    });
-
-    for (const article of cacheNews) {
-      const newArticle = await prisma.news.findMany({
-        where: { id: article.newsId },
-      });
-
-      newArticle[0].score = article.score;
-      newArticle[0].bookmarked = article.bookmarked;
-      newArticle[0].addTagInput = article.addTagInput;
-
-      personalizedNews.push(newArticle[0]);
-    }
+    const personalizedNews = await getUserNews(req);
 
     res.status(201).json(personalizedNews);
   } catch (error) {
@@ -405,7 +300,7 @@ router.put("/:newsid/tag-input", async (req, res) => {
   const newsid = req.params.newsid;
   const { addedInput } = req.body;
 
-  const article = await prisma.userNewsCache.findMany({
+  const article = await prisma.userNewsCache.findFirst({
     where: {
       userId: req.session.userId,
       newsId: parseInt(newsid),
@@ -414,7 +309,7 @@ router.put("/:newsid/tag-input", async (req, res) => {
 
   const updatedArticle = await prisma.userNewsCache.update({
     where: {
-      id: article[0].id,
+      id: article.id,
     },
     data: {
       addTagInput: addedInput,
@@ -428,19 +323,7 @@ router.put("/:newsid/tag-input", async (req, res) => {
     },
   });
 
-  const personalNews = [];
-  // there are entries found
-  for (const art of newNews) {
-    const newArticle = await prisma.news.findMany({
-      where: { id: art.newsId },
-    });
-
-    newArticle[0].score = art.score;
-    newArticle[0].bookmarked = art.bookmarked;
-    newArticle[0].addTagInput = art.addTagInput;
-
-    personalNews.push(newArticle[0]);
-  }
+  const personalNews = await getUserNews(req);
 
   res.status(200).json(personalNews);
 });
