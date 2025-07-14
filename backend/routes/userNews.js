@@ -71,6 +71,7 @@ router.get("/", async (req, res) => {
 
         newArticle[0].score = article.score;
         newArticle[0].bookmarked = article.bookmarked;
+        newArticle[0].addTagInput = article.addTagInput;
 
         personalNews.push(newArticle[0]);
       }
@@ -153,6 +154,7 @@ router.post("/add-news", async (req, res) => {
           bookmarked: false, // initially
           score: 0.0, // default
           addedTime: new Date(), // to keep track of how long the news has been in the cache
+          addTagInput: false, // have not contributed to an article yet
         },
       });
     }
@@ -229,6 +231,7 @@ router.post("/personalized", async (req, res) => {
 
     newArticle[0].score = art.score;
     newArticle[0].bookmarked = art.bookmarked;
+    newArticle[0].addTagInput = art.addTagInput;
 
     personalNews.push(newArticle[0]);
   }
@@ -365,6 +368,7 @@ router.post("/personalized", async (req, res) => {
             bookmarked: false, // initially
             score: 0.0, // default
             addedTime: new Date(),
+            addTagInput: false,
           },
         });
       }
@@ -385,6 +389,7 @@ router.post("/personalized", async (req, res) => {
 
       newArticle[0].score = article.score;
       newArticle[0].bookmarked = article.bookmarked;
+      newArticle[0].addTagInput = article.addTagInput;
 
       personalizedNews.push(newArticle[0]);
     }
@@ -393,6 +398,51 @@ router.post("/personalized", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Could not created personalized feed" });
   }
+});
+
+// update tagging contribution
+router.put("/:newsid/tag-input", async (req, res) => {
+  const newsid = req.params.newsid;
+  const { addedInput } = req.body;
+
+  const article = await prisma.userNewsCache.findMany({
+    where: {
+      userId: req.session.userId,
+      newsId: parseInt(newsid),
+    },
+  });
+
+  const updatedArticle = await prisma.userNewsCache.update({
+    where: {
+      id: article[0].id,
+    },
+    data: {
+      addTagInput: addedInput,
+    },
+  });
+
+  const newNews = await prisma.userNewsCache.findMany({
+    where: { userId: req.session.userId },
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  const personalNews = [];
+  // there are entries found
+  for (const art of newNews) {
+    const newArticle = await prisma.news.findMany({
+      where: { id: art.newsId },
+    });
+
+    newArticle[0].score = art.score;
+    newArticle[0].bookmarked = art.bookmarked;
+    newArticle[0].addTagInput = art.addTagInput;
+
+    personalNews.push(newArticle[0]);
+  }
+
+  res.status(200).json(personalNews);
 });
 
 // delete news from the cache

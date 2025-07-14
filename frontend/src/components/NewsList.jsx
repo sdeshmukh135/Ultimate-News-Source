@@ -35,6 +35,7 @@ const NewsList = ({ newsData, setNewsData }) => {
         <ArticleModal
           articleModalData={articleModalData}
           setArticleModalData={setArticleModalData}
+          setNewsData={setNewsData}
           handleSignalUpdates={handleSignalUpdates}
         />
       )}

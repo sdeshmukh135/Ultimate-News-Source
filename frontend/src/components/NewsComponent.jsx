@@ -3,6 +3,7 @@ import DefaultNewsImage from "/src/assets/default-news.png";
 import EmptyBookMarkImage from "/src/assets/emptyBookmark.png";
 import FilledBookMarkImage from "/src/assets/filledBookmark.png";
 import { SIGNALS } from "../utils/utils";
+import GradientBar from "./GradientBar";
 
 const NewsComponent = ({
   article,
@@ -15,8 +16,9 @@ const NewsComponent = ({
     const articleModalInfo = {
       url: article.articleURL,
       id: article.id,
+      addTagInput: article.addTagInput,
     };
-    setArticleModalData(articleModalInfo); // just so the modal appears on the screen
+    setArticleModalData(article); // just so the modal appears on the screen
     // add signal handling (update user interaction)
     handleSignalUpdates(article.id, SIGNALS.OPEN);
   };
@@ -92,6 +94,13 @@ const NewsComponent = ({
         )}
         <h3>{article.name}</h3>
         <h4>Release Date: {parseDate(article.releasedAt)}</h4>
+        <GradientBar article={article} />
+        <div className="tags">
+          <div className="tag-container">{article.sentiment[0].label}</div>
+          {article.category.map((cat) => {
+            return <div className="tag-container">{cat}</div>;
+          })}
+        </div>
       </div>
     </div>
   );

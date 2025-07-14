@@ -41,6 +41,7 @@ model UserNewsCache {
   bookmarked Boolean
   score Float // engagement score
   addedTime DateTime
+  addTagInput Boolean // whether the user added their input for this specific article
 }
 
 model Stock {
@@ -61,6 +62,9 @@ model News {
  articleURL String
  imageURL String?
  releasedAt DateTime
+ leftCount Int?
+ rightCount Int?
+ sentiment Json?
  interactions UserInteraction[]
  userNewsCache UserNewsCache[]
 }
