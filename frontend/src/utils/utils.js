@@ -6,3 +6,8 @@ export const SIGNALS = {
   LIKED: "liked",
   READ: "read",
 };
+
+export const TAGS = {
+  LEFT: "leftCount",
+  RIGHT: "rightCount",
+};
