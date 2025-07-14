@@ -22,3 +22,7 @@
   max-height: auto;
   overflow-y: auto;
 }
+
+.tag-options {
+  gap: 20px;
+}

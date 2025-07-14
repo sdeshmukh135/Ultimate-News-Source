@@ -3,13 +3,15 @@ const cors = require("cors");
 const session = require("express-session");
 const schedule = require("node-schedule");
 
+const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const MAX_REQUESTS_PER_API_LIMIT = 40;
+const MAX_REQUESTS_PER_API_LIMIT = 30;
 
 const authRoutes = require("./routes/auth");
 const newsRoutes = require("./routes/news");
@@ -77,6 +79,9 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
       const articles = data.data;
 
       for (const article of articles) {
+        const classifier = await pipeline("sentiment-analysis");
+        const result = await classifier(article.title); // classifying based on article title
+
         const publishedDate = new Date(article.published_at);
         const newArticle = {
           name: article.title,
@@ -84,6 +89,9 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
           articleURL: article.url,
           imageURL: article.image_url === "" ? null : article.image_url,
           releasedAt: publishedDate,
+          leftCount: 0,
+          rightCount: 0,
+          sentiment: result,
         };
 
         newsData.push(newArticle);

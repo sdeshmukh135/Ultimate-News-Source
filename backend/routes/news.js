@@ -3,6 +3,9 @@ const router = express.Router();
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+
+const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
+
 const MAX_REQUESTS_PER_API_LIMIT = 40;
 
 // get all news for a specific user
@@ -77,6 +80,76 @@ router.put("/update-news", async (req, res) => {
 
   const newsUpdatedData = await prisma.news.findMany();
   res.status(201).json(newsUpdatedData);
+});
+
+// update news for change in tags (testing purposes)
+router.put("/update-tags", async (req, res) => {
+  const allNews = await prisma.news.findMany({
+    where: {
+      leftCount: null,
+    },
+  });
+
+  try {
+    for (const article of allNews) {
+      const classifier = await pipeline("sentiment-analysis");
+      const result = await classifier(article.name); // classifying based on article title
+
+      await prisma.news.update({
+        where: {
+          id: article.id,
+        },
+        data: {
+          leftCount: 0,
+          rightCount: 0,
+          sentiment: result,
+        },
+      });
+    }
+
+    const updatedNews = await prisma.news.findMany();
+
+    res.status(200).json(updatedNews);
+  } catch (error) {
+    res.status(500).json({ error: "Error creating tags" });
+  }
+});
+
+// update tags for the specific news when a user updates a specific tag
+router.put("/:newsId/update-tag", async (req, res) => {
+  const newsid = req.params.newsId; // which news to update
+  const { tagToUpdate } = req.body;
+
+  const article = await prisma.news.findMany({
+    where: {
+      id: parseInt(newsid),
+    },
+  });
+
+  let updatedArticle = null;
+
+  if (tagToUpdate === "leftCount") {
+    updatedArticle = await prisma.news.update({
+      where: {
+        id: article[0].id,
+      },
+      data: {
+        leftCount: article[0].leftCount + 1,
+      },
+    });
+  } else if (tagToUpdate === "rightCount") {
+    // ..implied
+    updatedArticle = await prisma.news.update({
+      where: {
+        id: article[0].id,
+      },
+      data: {
+        rightCount: article[0].rightCount + 1,
+      },
+    });
+  }
+
+  res.status(200).json(updatedArticle);
 });
 
 // for testing purposes

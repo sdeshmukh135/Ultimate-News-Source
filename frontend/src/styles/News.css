@@ -34,3 +34,19 @@
   flex-wrap: wrap;
   justify-content: center;
 }
+
+.tag-container {
+  margin: 10px;
+  padding: 10px;
+  border: 2px solid #eeeeee;
+  display: flex;
+  width: auto;
+  background-color: black;
+  color: #fff6eb;
+}
+
+.tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}

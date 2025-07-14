@@ -1,0 +1,8 @@
+.counts {
+  display: flex;
+  justify-content: space-between;
+}
+
+.bar-container {
+  border: 2px solid black;
+}
