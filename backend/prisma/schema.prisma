@@ -67,14 +67,19 @@ model News {
  sentiment Json?
  interactions UserInteraction[]
  userNewsCache UserNewsCache[]
- globalInteraction GlobalInteraction[]
+ globalInteractions GlobalInteraction[]
 }
 
-model GlobalInteraction {
+model GlobalInteraction { // aggregated engagement signals per news across users
   id       Int    @id @default(autoincrement())
   openCount Int
+  readCount Int
+  likedCount Int
+  publishedDayOfWeek Int
+  publishedTime Int // just the hour for now
   newsId Int
-  news News @relation(fields : [newsId], references : [id])
+  score Float // engagement score
+  news News @relation(fields : [newsId], references : [id]) 
 }
 
 model Ranking {

@@ -20,9 +20,7 @@ const HomePage = () => {
   const fetchNews = (url) => {
     // fetches the news for the HomePage
     fetch(url, {
-      headers: {
-        credentials: "include",
-      },
+      credentials: "include",
     })
       .then((response) => {
         if (!response.ok) {

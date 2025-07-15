@@ -1,6 +1,12 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const WEIGHTS = {
+  READ: 3,
+  LIKED: 3,
+  OPEN: 4,
+};
+
 const getUserNews = async (req) => {
   const newNews = await prisma.userNewsCache.findMany({
     where: { userId: req.session.userId },
@@ -82,8 +88,35 @@ const createPersonalizedNews = async (req, news, rankings) => {
   }
 };
 
+const calculateEngagement = async (req) => {
+  const interactions = await prisma.userInteraction.findMany({
+    where: { userId: req.session.userId },
+  });
+
+  for (const interaction of interactions) {
+    // get article
+    const article = await prisma.userNewsCache.findFirst({
+      where: { newsId: interaction.newsId },
+    });
+
+    const weightedLiked = interaction.isLiked ? WEIGHTS.LIKED : 1.0;
+    const weightedOpen = interaction.openCount * WEIGHTS.OPEN; // 3 times whatever the number was
+    const weightedRead = interaction.readCount * WEIGHTS.READ;
+
+    const engagamentScore = weightedLiked + weightedOpen + weightedRead;
+
+    await prisma.userNewsCache.update({
+      where: { id: article.id },
+      data: {
+        score: engagamentScore,
+      },
+    });
+  }
+};
+
 module.exports = {
   getUserNews,
   getRankings,
   createPersonalizedNews,
+  calculateEngagement,
 };

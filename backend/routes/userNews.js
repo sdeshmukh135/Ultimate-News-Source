@@ -9,6 +9,7 @@ const {
   getUserNews,
   getRankings,
   createPersonalizedNews,
+  calculateEngagement,
 } = require("../recommendation");
 
 // enums
@@ -146,7 +147,9 @@ router.put("/:newsId/bookmarked", async (req, res) => {
   const newsid = parseInt(req.params.newsId);
   try {
     const article = await prisma.userNewsCache.findFirst({
-      where: { newsId: newsid },
+      where: { 
+      newsId: newsid,
+    userId: req.session.userId },
     });
     if (article != null) {
       // the metadata already exists so we are modifying an existing entry
@@ -168,6 +171,8 @@ router.put("/:newsId/bookmarked", async (req, res) => {
 
 // get a personalized feed
 router.post("/personalized", async (req, res) => {
+  await calculateEngagement(req); // calculates engagement scores
+
   const newNews = await prisma.userNewsCache.findMany({
     where: { userId: req.session.userId },
     orderBy: {
@@ -295,42 +300,13 @@ router.post("/personalized", async (req, res) => {
   }
 });
 
-// update tagging contribution
-router.put("/:newsid/tag-input", async (req, res) => {
-  const newsid = req.params.newsid;
-  const { addedInput } = req.body;
-
-  const article = await prisma.userNewsCache.findFirst({
-    where: {
-      userId: req.session.userId,
-      newsId: parseInt(newsid),
-    },
-  });
-
-  const updatedArticle = await prisma.userNewsCache.update({
-    where: {
-      id: article.id,
-    },
-    data: {
-      addTagInput: addedInput,
-    },
-  });
-
-  const newNews = await prisma.userNewsCache.findMany({
-    where: { userId: req.session.userId },
-    orderBy: {
-      id: "desc",
-    },
-  });
-
-  const personalNews = await getUserNews(req);
-
-  res.status(200).json(personalNews);
-});
-
 // delete news from the cache
 router.delete("/delete", async (req, res) => {
-  await prisma.userNewsCache.deleteMany();
+  await prisma.userNewsCache.deleteMany({
+    where : {
+      userId : req.session.userId,
+    }
+  });
   res.status(201).json({ message: "Deleted Successfully" });
 });
 

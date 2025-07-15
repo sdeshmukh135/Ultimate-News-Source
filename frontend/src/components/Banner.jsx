@@ -7,25 +7,6 @@ const Banner = ({ setFilterOption, setNewsData }) => {
   const handleRefresh = () => {
     // refresh for personalized news (must update engagement scores and send personalized news back to screen)
 
-    // update engagement scores
-    fetch(`http://localhost:3000/interactions/update-scores`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        credentials: "include",
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .catch((error) => {
-        console.error("Error updating the engagement scores: ", error);
-      });
-
     // get personalized news
     fetch(`http://localhost:3000/user-news/personalized`, {
       method: "POST",

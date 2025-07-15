@@ -32,8 +32,8 @@ const NewsComponent = ({
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        credentials: "include",
       },
+      credentials: "include",
       body: JSON.stringify({
         isBookmarked: !article.bookmarked,
       }),
