@@ -20,12 +20,13 @@ const featureRoutes = require("./routes/feature");
 const cacheRoutes = require("./routes/userNews");
 const interactionRoutes = require("./routes/interactions");
 const rankingRoutes = require("./routes/rankings");
+const globalRoutes = require("./routes/globalInteractions")
 
 app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:5175", // Replace with your frontend's origin
+    origin: "http://localhost:5173", // Replace with your frontend's origin
     credentials: true,
   }),
 );
@@ -59,6 +60,7 @@ app.use("/featured", featureRoutes);
 app.use("/user-news", cacheRoutes);
 app.use("/interactions", interactionRoutes);
 app.use("/ranking", rankingRoutes);
+app.use("/global", globalRoutes);
 
 app.listen(PORT, () => {});
 

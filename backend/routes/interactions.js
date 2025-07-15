@@ -136,7 +136,11 @@ router.put("/update-scores", async (req, res) => {
 
 // delete current interactions (testing purposes)
 router.delete("/delete", async (req, res) => {
-  await prisma.userInteraction.deleteMany();
+  await prisma.userInteraction.deleteMany({
+    where : {
+      userId : req.session.userId,
+    }
+  });
   res.status(201).json({ message: "Deleted Successfully" });
 });
 

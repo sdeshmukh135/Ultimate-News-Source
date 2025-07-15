@@ -5,6 +5,12 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const { getUserNews } = require("../recommendation");
+const {
+  aggregateMetrics,
+  groupByDate,
+  groupByCategory,
+  getCategoryEngagement,
+} = require("../scheduler");
 
 const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
 
@@ -35,7 +41,7 @@ router.post("/seed-news", async (req, res) => {
   for (let i = 0; i < MAX_REQUESTS_PER_API_LIMIT; i++) {
     // in order to get 120 total articles at once (3 articles per loop)
     const response = await fetch(
-      ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`,
+      ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`
     );
     const data = await response.json();
     const articles = data.data;
@@ -194,6 +200,66 @@ router.post("/add-news", async (req, res) => {
   });
 
   res.status(201).json(news);
+});
+
+// create new posts (schedule when to create them)
+router.post("/find-times", async (req, res) => {
+  const { categories, deadline, title, url, imageURL } = req.body; // user input (hardcoded for now for testing)
+
+  try {
+    const interactions = await aggregateMetrics();
+
+    for (const interaction of interactions) {
+      // calculate engagement scores (hardcoded weights, will make dynamic)
+      const score =
+        WEIGHTS.LIKED * interaction.likedCount +
+        WEIGHTS.OPEN * interaction.openCount +
+        WEIGHTS.READ * interaction.readCount;
+      const updatedInteraction = await prisma.globalInteraction.update({
+        where: {
+          id: interaction.id,
+        },
+        data: {
+          score: score,
+        },
+      });
+    }
+
+    const globalInteractions = await prisma.globalInteraction.findMany();
+
+    const dateIntervals = await groupByDate(globalInteractions);
+
+    const categoriedTimes = groupByCategory(dateIntervals);
+
+    const categoryAvgs = await getCategoryEngagement(globalInteractions); // engagement scores per category
+
+    // update the scores of the categoriedTimes using normalizedScore = timeAvg / catAvg --> score = normalizedScore + log(1 + articleCount)
+    for (const category in categoriedTimes) {
+      for (const interval in categoriedTimes[category]) {
+        // the time buckets within the category
+        categoriedTimes[category][interval].score = (
+          categoriedTimes[category][interval].score /
+            (categoryAvgs[category].score / categoryAvgs[category].count) +
+          Math.log(1 + categoriedTimes[category][interval].count)
+        ).toFixed(2);
+      }
+    }
+
+    // get the time options and scores of the categories that match the user's categories
+    let options = {}; // TO-DO: change options to a priority queue to take top 3 options much more efficiently
+    for (const category of categories) {
+      for (const interval in categoriedTimes[category]) {
+        options[interval] = categoriedTimes[category][interval].score;
+      }
+    }
+
+    options = Object.entries(options);
+    options = options.sort((a, b) => b[1] - a[1]).slice(0, 3); // top three options, change operation with priority queue
+
+    res.status(200).json(options); // best time intervals to post article
+  } catch (error) {
+    res.status(500).json({ error: "something went wrong with finding times" });
+  }
 });
 
 // to delete duplicate news (due to API problems)
