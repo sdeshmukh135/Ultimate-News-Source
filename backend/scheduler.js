@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 const aggregateMetrics = async () => {
   const metrics = await prisma.userInteraction.findMany();
 
+  // TO-DO: delete previous aggregations before aggregating the metrics again- until there is a timestamp on when every interaction was last updated
+
   for (const interaction of metrics) {
     const article = await prisma.globalInteraction.findFirst({
       where: { newsId: interaction.newsId },

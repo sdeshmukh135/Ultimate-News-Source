@@ -264,37 +264,43 @@ router.post("/personalized", async (req, res) => {
     ); // json of the newsIds and the rankings
 
     //delete previous ranking list
-    await prisma.ranking.deleteMany({
-      where: { userId: req.session.userId },
-    });
+    // await prisma.ranking.deleteMany({
+    //   where: { userId: req.session.userId },
+    // });
 
-    for (const ranking of rankings) {
-      // add to ranking database
-      const newRanking = await prisma.ranking.create({
-        data: {
-          userId: req.session.userId,
-          newsId: ranking.newsId,
-          rank: ranking.totalScore,
-        },
-      });
+    // for (const ranking of rankings) {
+    //   // add to ranking database
+    //   const newRanking = await prisma.ranking.create({
+    //     data: {
+    //       userId: req.session.userId,
+    //       newsId: ranking.newsId,
+    //       rank: ranking.totalScore,
+    //     },
+    //   });
+    // }
+
+    // let sortedRankings = await prisma.ranking.findMany({
+    //   where: {
+    //     userId: req.session.userId,
+    //   },
+    //   orderBy: {
+    //     rank: "desc",
+    //   },
+    //   take: 30,
+    // });
+
+    const topRankings = []
+    for (let i = 0; i < 40; i++) { // top 30
+      topRankings[i] = rankings.poll().value;
     }
 
-    let sortedRankings = await prisma.ranking.findMany({
-      where: {
-        userId: req.session.userId,
-      },
-      orderBy: {
-        rank: "desc",
-      },
-      take: 30,
-    });
+    //topRankings = topRankings.map((ranking) => ranking.id);
 
-    sortedRankings = sortedRankings.map((ranking) => ranking.newsId);
-    await createPersonalizedNews(req, notUsedNews, sortedRankings);
+    // await createPersonalizedNews(req, notUsedNews, topRankings);
 
-    const personalizedNews = await getUserNews(req);
+    // const personalizedNews = await getUserNews(req);
 
-    res.status(201).json(personalizedNews);
+    res.status(201).json(topRankings);
   } catch (error) {
     res.status(500).json({ error: "Could not created personalized feed" });
   }

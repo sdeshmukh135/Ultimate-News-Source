@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const {Node, PriorityQueue} = require("./PriorityQueue")
+
 const WEIGHTS = {
   READ: 3,
   LIKED: 3,
@@ -40,6 +42,7 @@ const getRankings = async (
   notUsedNews,
 ) => {
   let rankings = []; // json of the newsIds and the rankings
+  let queue = new PriorityQueue();
   for (const article of notUsedNews) {
     // calculate the score
     let score = 0.0;
@@ -59,6 +62,9 @@ const getRankings = async (
       score += sourceScores[URLString];
     }
 
+    const ranking = new Node(article.id, score);
+    queue.add(ranking);
+
     const newRanking = {
       newsId: article.id,
       totalScore: score,
@@ -67,7 +73,7 @@ const getRankings = async (
     rankings.push(newRanking);
   }
 
-  return rankings;
+  return queue;
 };
 
 const createPersonalizedNews = async (req, news, rankings) => {
