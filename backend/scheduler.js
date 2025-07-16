@@ -1,12 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const WEIGHTS = {
-  READ: 3,
-  LIKED: 3,
-  OPEN: 4,
-};
-
 // functions for scheduling algorithm
 
 const aggregateMetrics = async () => {
@@ -24,10 +18,13 @@ const aggregateMetrics = async () => {
     if (article != null) {
       // the article is already present
       const updatedInteraction = await prisma.globalInteraction.update({
+        where: { id: article.id },
         data: {
           openCount: interaction.openCount + article.openCount,
           readCount: interaction.readCount + article.readCount,
-          likedCOunt: article.isLiked ? likedCount + 1 : likedCount,
+          likedCount: article.isLiked
+            ? article.likedCount + 1
+            : article.likedCount,
         },
       });
     } else {

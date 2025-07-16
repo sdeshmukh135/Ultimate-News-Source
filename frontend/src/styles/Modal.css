@@ -12,7 +12,7 @@
 
 .modal-content {
   background-color: #eeeeee;
-  margin: 5% auto; /* 15% from the top and centered */
+  margin: auto; /* 15% from the top and centered */
   padding: 10px;
   border: 2px solid #9e0b0f;
   border-radius: 5%;
@@ -25,4 +25,24 @@
 
 .tag-options {
   gap: 20px;
+}
+
+.postInput {
+  width:80%auto;
+  height:100px;
+}
+
+.time-options {
+  display:flex;
+}
+
+.option {
+  margin:10px;
+  border: 2px solid black;
+  padding:15px;
+}
+
+.loading {
+  width:50%;
+  height: 50%;
 }
