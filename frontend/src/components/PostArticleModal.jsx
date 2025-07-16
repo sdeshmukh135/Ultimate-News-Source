@@ -128,7 +128,6 @@ const PostArticleModal = ({ setOpenPostModal }) => {
   };
 
   const setScheduledTime = (time) => {
-    // TO-DO: Set the scheduled time in using setPost
     setSelectedTime(time);
     setPost((prev) => ({ ...prev, timeToSchedule: time })); // new post content is all there now
   };
