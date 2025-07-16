@@ -1,8 +1,16 @@
 import FilterDropDown from "../components/FilterDropDown.jsx";
 import "../styles/Banner.css";
+import { useState } from "react";
+import PlusSign from "/src/assets/plusSign.png";
+import PostArticleModal from "./PostArticleModal.jsx";
 
 const Banner = ({ setFilterOption, setNewsData }) => {
   // ONLY visible to those logged in
+  const [openPostModal, setOpenPostModal] = useState(false);
+
+  const openModal = () => {
+    setOpenPostModal(true);
+  };
 
   const handleRefresh = () => {
     // refresh for personalized news (must update engagement scores and send personalized news back to screen)
@@ -35,6 +43,15 @@ const Banner = ({ setFilterOption, setNewsData }) => {
       <h2>News for You</h2>
       <button onClick={handleRefresh}>Refresh Feed</button>
       <FilterDropDown setFilterOption={setFilterOption} />
+      <img
+        className="plus-sign"
+        src={PlusSign}
+        alt="plus sign"
+        onClick={openModal}
+      />
+      {openPostModal && (
+        <PostArticleModal setOpenPostModal={setOpenPostModal} />
+      )}
     </div>
   );
 };

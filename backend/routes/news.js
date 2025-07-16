@@ -13,8 +13,15 @@ const {
 } = require("../scheduler");
 
 const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
+const schedule = require("node-schedule");
 
-const MAX_REQUESTS_PER_API_LIMIT = 40;
+const MAX_REQUESTS_PER_API_LIMIT = 30;
+
+const WEIGHTS = {
+  READ: 3,
+  LIKED: 3,
+  OPEN: 4,
+};
 
 // get all news for a specific user
 router.get("/", async (req, res) => {
@@ -47,6 +54,9 @@ router.post("/seed-news", async (req, res) => {
     const articles = data.data;
 
     for (const article of articles) {
+      const classifier = await pipeline("sentiment-analysis");
+      const result = await classifier(article.title); // classifying based on article title
+
       const publishedDate = new Date(article.published_at);
       const newArticle = {
         name: article.title,
@@ -54,6 +64,9 @@ router.post("/seed-news", async (req, res) => {
         articleURL: article.url,
         imageURL: article.image_url === "" ? null : article.image_url,
         releasedAt: publishedDate,
+        leftCount: 0,
+        rightCount: 0,
+        sentiment: result,
       };
 
       newsData.push(newArticle);
@@ -202,10 +215,52 @@ router.post("/add-news", async (req, res) => {
   res.status(201).json(news);
 });
 
+router.post("/add-new-news", async (req, res) => {
+  const { title, categories, imageURL, url, timeToSchedule } = req.body;
+
+  const currentDate = new Date();
+  const currentDay = currentDate.getDay();
+  let dayOffset = parseInt(timeToSchedule.slice(0, 1)) - currentDay;
+
+  if (dayOffset < 0) {
+    // the day during the week has already passed
+    dayOffset += 7; // next week
+  }
+
+  const scheduledDate = new Date(currentDate);
+
+  scheduledDate.setDate(currentDate.getDate() + dayOffset);
+
+  scheduledDate.setHours(parseInt(timeToSchedule.slice(2, 5)), 0, 0, 0); // the specific hour
+
+  // schedule the job
+  try {
+    const scheduledJob = schedule.scheduleJob(scheduledDate, async function () {
+      const classifier = await pipeline("sentiment-analysis");
+      const result = await classifier(title); // classifying based on article title
+
+      const newArticle = await prisma.news.create({
+        data: {
+          name: title,
+          category: categories,
+          articleURL: url,
+          imageURL: imageURL,
+          releasedAt: scheduledDate,
+          leftCount: 0,
+          rightCount: 0,
+          sentiment: result,
+        },
+      });
+    });
+    res.status(200).json({ message: "Scheduled Job Successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Unable to schedule job" });
+  }
+});
+
 // create new posts (schedule when to create them)
 router.post("/find-times", async (req, res) => {
   const { categories, deadline, title, url, imageURL } = req.body; // user input (hardcoded for now for testing)
-
   try {
     const interactions = await aggregateMetrics();
 
