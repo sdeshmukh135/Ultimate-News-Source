@@ -216,7 +216,6 @@ router.post("/add-news", async (req, res) => {
 });
 
 router.post("/add-new-news", async (req, res) => {
-  // TO-DO: add the news as a scheduled job to add the news at a specific time
   const { title, categories, imageURL, url, timeToSchedule } = req.body;
 
   const currentDate = new Date();
