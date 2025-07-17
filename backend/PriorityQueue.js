@@ -52,7 +52,7 @@ export class PriorityQueue {
     }
 
     hasRightNode = (index) => {
-        return this.getRightIndex(index) > this.heap.length; // index is a valid index
+        return this.getRightIndex(index) < this.heap.length; // index is a valid index
     }
 
     hasParent = (index) => {

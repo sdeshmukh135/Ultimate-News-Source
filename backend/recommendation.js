@@ -3,11 +3,13 @@ const prisma = new PrismaClient();
 
 const {Node, PriorityQueue} = require("./PriorityQueue")
 
-const WEIGHTS = {
-  READ: 3,
-  LIKED: 3,
-  OPEN: 4,
-};
+const expoDecayFactor = (releaseDate, lambda = 0.05) => { // fetch the decay factor based on what the releasedAt date
+  // perform exponential decay (based on the difference in time from the release date and today's date)
+  const currentTime = new Date();
+  const delta = (currentTime - releaseDate) / (1000 * 60 * 60 * 24); // convert to days (to find the difference in days)
+
+  return Math.exp(-lambda * delta);
+}
 
 const getUserNews = async (req) => {
   const newNews = await prisma.userNewsCache.findMany({
@@ -39,9 +41,9 @@ const getRankings = async (
   dateScores,
   categoryScores,
   sourceScores,
+  sentimentScores,
   notUsedNews,
 ) => {
-  let rankings = []; // json of the newsIds and the rankings
   let queue = new PriorityQueue();
   for (const article of notUsedNews) {
     // calculate the score
@@ -54,7 +56,9 @@ const getRankings = async (
     }
 
     if (dateScores.hasOwnProperty(article.releasedAt.toDateString())) {
-      score += dateScores[article.releasedAt.toDateString()];
+      score += (dateScores[article.releasedAt.toDateString()] * expoDecayFactor(article.releasedAt));
+    } else {
+      score += (0.5) * expoDecayFactor(article.releasedAt); // explorary weight to give articles that do not have a match but are more recent still some weightage
     }
 
     const URLString = new URL(article.articleURL).hostname;
@@ -62,15 +66,12 @@ const getRankings = async (
       score += sourceScores[URLString];
     }
 
+    if (sentimentScores.hasOwnProperty(article.sentiment[0].label)) {
+      score += sentimentScores[article.sentiment[0].label];
+    }
+
     const ranking = new Node(article.id, score);
     queue.add(ranking);
-
-    const newRanking = {
-      newsId: article.id,
-      totalScore: score,
-    };
-
-    rankings.push(newRanking);
   }
 
   return queue;
@@ -105,11 +106,20 @@ const calculateEngagement = async (req) => {
       where: { newsId: interaction.newsId },
     });
 
-    const weightedLiked = interaction.isLiked ? WEIGHTS.LIKED : 1.0;
-    const weightedOpen = interaction.openCount * WEIGHTS.OPEN; // 3 times whatever the number was
-    const weightedRead = interaction.readCount * WEIGHTS.READ;
+    const weightedLiked = interaction.isLiked ? (await prisma.engagementWeight.findFirst({
+      where : {signal : "isLiked"}
+    })).weight : 1.0; // 1.0 as the default (i.e. no effect if it has not been bookmarked)
+    const weightedOpen = interaction.openCount * (await prisma.engagementWeight.findFirst({
+      where : {signal : "openCount"}
+    })).weight; // 3 times whatever the number was
+    const weightedRead = interaction.readCount * (await prisma.engagementWeight.findFirst({
+      where : {signal : "readCount"}
+    })).weight;
+    const weightedVoted = interaction.voted ? (await prisma.engagementWeight.findFirst({
+      where : {signal : "voted"}
+    })).weight : 1.0;
 
-    const engagamentScore = weightedLiked + weightedOpen + weightedRead;
+    const engagamentScore = weightedLiked + weightedOpen + weightedRead + weightedVoted;
 
     await prisma.userNewsCache.update({
       where: { id: article.id },

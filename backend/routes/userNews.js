@@ -202,6 +202,7 @@ router.post("/personalized", async (req, res) => {
     let categories = []; // aggregate the categories present in the top 10
     let publishDates = [];
     let sources = [];
+    let sentiments = [];
     for (const article of top10) {
       for (const category of article.category) {
         if (!categories.includes(category)) {
@@ -212,13 +213,16 @@ router.post("/personalized", async (req, res) => {
       // isolate the source (everything after the https:// and before the .com)
       const URLString = new URL(article.articleURL).hostname;
       sources.push(URLString); // source
+      sentiments.push(article.sentiment[0].label);
     }
 
     // perform similiarity analysis
     weightedCategoryScores = {}; // scores for every category (how many points a news article gets for having this category)
     weightedSourcesScores = {};
     weightedDateScores = {}; // want the news to be recent, at least as close to the previous articles as possible
+    weightedSentimentScores = {}; // want to get weights for Positive versus Negative news articles
     for (const article of top10) {
+
       let similiarity = getSimiliarity(categories, article.category);
       for (let category of article.category) {
         if (category in weightedCategoryScores) {
@@ -247,6 +251,15 @@ router.post("/personalized", async (req, res) => {
       } else {
         weightedSourcesScores[URLString] = similiarity;
       }
+
+      // for sentiment
+      const sentiment = article.sentiment[0].label;
+      similiarity = getSimiliarity(sentiments, [sentiment]);
+      if (sentiment in weightedSentimentScores) {
+        weightedSentimentScores[sentiment] += similiarity;
+      } else {
+        weightedSentimentScores[sentiment] = similiarity;
+      }
     }
 
     // use the weights to give all news a score
@@ -260,47 +273,21 @@ router.post("/personalized", async (req, res) => {
       weightedDateScores,
       weightedCategoryScores,
       weightedSourcesScores,
+      weightedSentimentScores,
       notUsedNews,
     ); // json of the newsIds and the rankings
 
-    //delete previous ranking list
-    // await prisma.ranking.deleteMany({
-    //   where: { userId: req.session.userId },
-    // });
-
-    // for (const ranking of rankings) {
-    //   // add to ranking database
-    //   const newRanking = await prisma.ranking.create({
-    //     data: {
-    //       userId: req.session.userId,
-    //       newsId: ranking.newsId,
-    //       rank: ranking.totalScore,
-    //     },
-    //   });
-    // }
-
-    // let sortedRankings = await prisma.ranking.findMany({
-    //   where: {
-    //     userId: req.session.userId,
-    //   },
-    //   orderBy: {
-    //     rank: "desc",
-    //   },
-    //   take: 30,
-    // });
-
     const topRankings = []
-    for (let i = 0; i < 40; i++) { // top 30
-      topRankings[i] = rankings.poll().value;
+    for (let i = 0; i < 30; i++) { // top 30
+      const polled = rankings.poll();
+      topRankings[i] = polled.id;
     }
 
-    //topRankings = topRankings.map((ranking) => ranking.id);
+    await createPersonalizedNews(req, notUsedNews, topRankings);
 
-    // await createPersonalizedNews(req, notUsedNews, topRankings);
+    const personalizedNews = await getUserNews(req);
 
-    // const personalizedNews = await getUserNews(req);
-
-    res.status(201).json(topRankings);
+    res.status(201).json(personalizedNews);
   } catch (error) {
     res.status(500).json({ error: "Could not created personalized feed" });
   }

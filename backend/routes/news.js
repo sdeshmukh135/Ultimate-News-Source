@@ -159,7 +159,6 @@ router.put("/:newsId/update-tag", async (req, res) => {
       },
     });
   } else if (tagToUpdate === "rightCount") {
-    // ..implied
     updatedArticle = await prisma.news.update({
       where: {
         id: article.id,
@@ -186,6 +185,36 @@ router.put("/:newsId/update-tag", async (req, res) => {
       addTagInput: addedInput,
     },
   });
+
+  // update user interaction
+  const userInteraction = await prisma.userInteraction.findFirst({
+    where : {
+      userId : req.session.userId,
+      newsId : parseInt(newsid)
+    },
+  })
+
+  if (userInteraction) { // if this user has interacted with this article before
+    const updatedInteraction = await prisma.userInteraction.update({
+      where : {
+        id : userInteraction.id
+      },
+      data : {
+        voted : true
+      }
+    })
+  } else { // this is the first interaction with the article
+    await prisma.userInteraction.create({
+        data: {
+          user: { connect: { id: req.session.userId } },
+          news: { connect: { id: newsid } }, // news id
+          openCount: 0, // 0 is default
+          readCount: 0,
+          isLiked: false, // false is default
+          voted : true
+        },
+      })
+  }
 
   const personalNews = await getUserNews(req);
 
