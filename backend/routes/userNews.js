@@ -35,7 +35,7 @@ const RecentFilters = {
 
 const getSimiliarity = (userCategories, articleCategories) => {
   let intersection = new Set(
-    [...articleCategories].filter((e) => userCategories.includes(e)),
+    [...articleCategories].filter((e) => userCategories.includes(e))
   ); // A N B
   let union = new Set([...userCategories, ...articleCategories]); // A U B
 
@@ -147,9 +147,10 @@ router.put("/:newsId/bookmarked", async (req, res) => {
   const newsid = parseInt(req.params.newsId);
   try {
     const article = await prisma.userNewsCache.findFirst({
-      where: { 
-      newsId: newsid,
-    userId: req.session.userId },
+      where: {
+        newsId: newsid,
+        userId: req.session.userId,
+      },
     });
     if (article != null) {
       // the metadata already exists so we are modifying an existing entry
@@ -202,6 +203,7 @@ router.post("/personalized", async (req, res) => {
     let categories = []; // aggregate the categories present in the top 10
     let publishDates = [];
     let sources = [];
+    let sentiments = [];
     for (const article of top10) {
       for (const category of article.category) {
         if (!categories.includes(category)) {
@@ -212,12 +214,14 @@ router.post("/personalized", async (req, res) => {
       // isolate the source (everything after the https:// and before the .com)
       const URLString = new URL(article.articleURL).hostname;
       sources.push(URLString); // source
+      sentiments.push(article.sentiment[0].label);
     }
 
     // perform similiarity analysis
     weightedCategoryScores = {}; // scores for every category (how many points a news article gets for having this category)
     weightedSourcesScores = {};
     weightedDateScores = {}; // want the news to be recent, at least as close to the previous articles as possible
+    weightedSentimentScores = {}; // want to get weights for Positive versus Negative news articles
     for (const article of top10) {
       let similiarity = getSimiliarity(categories, article.category);
       for (let category of article.category) {
@@ -247,50 +251,40 @@ router.post("/personalized", async (req, res) => {
       } else {
         weightedSourcesScores[URLString] = similiarity;
       }
+
+      // for sentiment
+      const sentiment = article.sentiment[0].label;
+      similiarity = getSimiliarity(sentiments, [sentiment]);
+      if (sentiment in weightedSentimentScores) {
+        weightedSentimentScores[sentiment] += similiarity;
+      } else {
+        weightedSentimentScores[sentiment] = similiarity;
+      }
     }
 
     // use the weights to give all news a score
     const allNews = await prisma.news.findMany();
     const usedNews = newNews.map((article) => article.newsId);
     const notUsedNews = allNews.filter(
-      (article) => !usedNews.includes(article.id),
+      (article) => !usedNews.includes(article.id)
     ); // so that we are not looking at articles that have already been seen
 
     let rankings = await getRankings(
       weightedDateScores,
       weightedCategoryScores,
       weightedSourcesScores,
-      notUsedNews,
+      weightedSentimentScores,
+      notUsedNews
     ); // json of the newsIds and the rankings
 
-    //delete previous ranking list
-    await prisma.ranking.deleteMany({
-      where: { userId: req.session.userId },
-    });
-
-    for (const ranking of rankings) {
-      // add to ranking database
-      const newRanking = await prisma.ranking.create({
-        data: {
-          userId: req.session.userId,
-          newsId: ranking.newsId,
-          rank: ranking.totalScore,
-        },
-      });
+    const topRankings = [];
+    for (let i = 0; i < 30; i++) {
+      // top 30
+      const polled = rankings.poll();
+      topRankings[i] = polled.id;
     }
 
-    let sortedRankings = await prisma.ranking.findMany({
-      where: {
-        userId: req.session.userId,
-      },
-      orderBy: {
-        rank: "desc",
-      },
-      take: 30,
-    });
-
-    sortedRankings = sortedRankings.map((ranking) => ranking.newsId);
-    await createPersonalizedNews(req, notUsedNews, sortedRankings);
+    await createPersonalizedNews(req, notUsedNews, topRankings);
 
     const personalizedNews = await getUserNews(req);
 
@@ -303,9 +297,9 @@ router.post("/personalized", async (req, res) => {
 // delete news from the cache
 router.delete("/delete", async (req, res) => {
   await prisma.userNewsCache.deleteMany({
-    where : {
-      userId : req.session.userId,
-    }
+    where: {
+      userId: req.session.userId,
+    },
   });
   res.status(201).json({ message: "Deleted Successfully" });
 });

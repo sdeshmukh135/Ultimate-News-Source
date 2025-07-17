@@ -19,8 +19,8 @@ const stockRoutes = require("./routes/stock");
 const featureRoutes = require("./routes/feature");
 const cacheRoutes = require("./routes/userNews");
 const interactionRoutes = require("./routes/interactions");
-const rankingRoutes = require("./routes/rankings");
 const globalRoutes = require("./routes/globalInteractions")
+const weightRoutes = require("./routes/weights")
 
 app.use(express.json());
 
@@ -59,8 +59,8 @@ app.use("/stocks", stockRoutes);
 app.use("/featured", featureRoutes);
 app.use("/user-news", cacheRoutes);
 app.use("/interactions", interactionRoutes);
-app.use("/ranking", rankingRoutes);
 app.use("/global", globalRoutes);
+app.use("/weights", weightRoutes);
 
 app.listen(PORT, () => {});
 

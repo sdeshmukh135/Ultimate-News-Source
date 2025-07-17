@@ -27,6 +27,7 @@ model UserInteraction {
   isLiked Boolean // to read later
   readCount Int // clicked on "view article"
   newsId Int
+  voted Boolean? // update when the userNewsCache is updated
   news News? @relation(fields : [newsId], references : [id]) 
   userId Int
   user User? @relation(fields : [userId], references : [id])
@@ -82,11 +83,11 @@ model GlobalInteraction { // aggregated engagement signals per news across users
   news News @relation(fields : [newsId], references : [id]) 
 }
 
-model Ranking {
+model EngagementWeight { // makes weights dynamic and flexible
   id       Int    @id @default(autoincrement())
-  rank Int
-  newsId Int
-  userId Int
+  signal String
+  weight Int
+  updatedLast DateTime @default(now()) // just in case we need to update the weights
 }
 
 model Feature {
