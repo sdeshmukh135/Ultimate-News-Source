@@ -1,15 +1,16 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const {Node, PriorityQueue} = require("./PriorityQueue")
+const { Node, PriorityQueue } = require("./PriorityQueue");
 
-const expoDecayFactor = (releaseDate, lambda = 0.05) => { // fetch the decay factor based on what the releasedAt date
+const expoDecayFactor = (releaseDate, lambda = 0.05) => {
+  // fetch the decay factor based on what the releasedAt date
   // perform exponential decay (based on the difference in time from the release date and today's date)
   const currentTime = new Date();
   const delta = (currentTime - releaseDate) / (1000 * 60 * 60 * 24); // convert to days (to find the difference in days)
 
   return Math.exp(-lambda * delta);
-}
+};
 
 const getUserNews = async (req) => {
   const newNews = await prisma.userNewsCache.findMany({
@@ -42,7 +43,7 @@ const getRankings = async (
   categoryScores,
   sourceScores,
   sentimentScores,
-  notUsedNews,
+  notUsedNews
 ) => {
   let queue = new PriorityQueue();
   for (const article of notUsedNews) {
@@ -56,9 +57,11 @@ const getRankings = async (
     }
 
     if (dateScores.hasOwnProperty(article.releasedAt.toDateString())) {
-      score += (dateScores[article.releasedAt.toDateString()] * expoDecayFactor(article.releasedAt));
+      score +=
+        dateScores[article.releasedAt.toDateString()] *
+        expoDecayFactor(article.releasedAt);
     } else {
-      score += (0.5) * expoDecayFactor(article.releasedAt); // explorary weight to give articles that do not have a match but are more recent still some weightage
+      score += 0.5 * expoDecayFactor(article.releasedAt); // explorary weight to give articles that do not have a match but are more recent still some weightage
     }
 
     const URLString = new URL(article.articleURL).hostname;
@@ -106,20 +109,37 @@ const calculateEngagement = async (req) => {
       where: { newsId: interaction.newsId },
     });
 
-    const weightedLiked = interaction.isLiked ? (await prisma.engagementWeight.findFirst({
-      where : {signal : "isLiked"}
-    })).weight : 1.0; // 1.0 as the default (i.e. no effect if it has not been bookmarked)
-    const weightedOpen = interaction.openCount * (await prisma.engagementWeight.findFirst({
-      where : {signal : "openCount"}
-    })).weight; // 3 times whatever the number was
-    const weightedRead = interaction.readCount * (await prisma.engagementWeight.findFirst({
-      where : {signal : "readCount"}
-    })).weight;
-    const weightedVoted = interaction.voted ? (await prisma.engagementWeight.findFirst({
-      where : {signal : "voted"}
-    })).weight : 1.0;
+    const weightedLiked = interaction.isLiked
+      ? (
+          await prisma.engagementWeight.findFirst({
+            where: { signal: "isLiked" },
+          })
+        ).weight
+      : 1.0; // 1.0 as the default (i.e. no effect if it has not been bookmarked)
+    const weightedOpen =
+      interaction.openCount *
+      (
+        await prisma.engagementWeight.findFirst({
+          where: { signal: "openCount" },
+        })
+      ).weight; // 3 times whatever the number was
+    const weightedRead =
+      interaction.readCount *
+      (
+        await prisma.engagementWeight.findFirst({
+          where: { signal: "readCount" },
+        })
+      ).weight;
+    const weightedVoted = interaction.voted
+      ? (
+          await prisma.engagementWeight.findFirst({
+            where: { signal: "voted" },
+          })
+        ).weight
+      : 1.0;
 
-    const engagamentScore = weightedLiked + weightedOpen + weightedRead + weightedVoted;
+    const engagamentScore =
+      weightedLiked + weightedOpen + weightedRead + weightedVoted;
 
     await prisma.userNewsCache.update({
       where: { id: article.id },
