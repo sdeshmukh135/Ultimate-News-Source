@@ -32,7 +32,7 @@ const ArticleModal = (props) => {
           tagToUpdate: tag,
           addedInput: true,
         }),
-      },
+      }
     )
       .then((response) => {
         if (!response.ok) {
@@ -59,7 +59,11 @@ const ArticleModal = (props) => {
         <button className="articleButton" onClick={openArticle}>
           Article
         </button>
-        <Whiteboard />
+        <Whiteboard
+          setNewsData={props.setNewsData}
+          id={props.articleModalData.id}
+          canvasData={props.articleModalData.canvasData}
+        />
 
         <div className="userInput">
           {answered ? (

@@ -294,6 +294,33 @@ router.post("/personalized", async (req, res) => {
   }
 });
 
+// update canvas data
+router.put("/:newsId/update-canvas", async (req, res) => {
+  const { data } = req.body; // the canvas data in JSON format
+  const newsid = req.params.newsId;
+
+  try {
+    const article = await prisma.userNewsCache.findFirst({
+      where: {
+        userId: req.session.userId,
+        newsId: parseInt(newsid),
+      },
+    });
+
+    const updatedCanvas = await prisma.userNewsCache.update({
+      where: { id: article.id },
+      data: {
+        canvasData: data,
+      },
+    });
+
+    const personalNews = await getUserNews(req);
+    res.status(200).json(personalNews);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update canvas data" });
+  }
+});
+
 // delete news from the cache
 router.delete("/delete", async (req, res) => {
   await prisma.userNewsCache.deleteMany({

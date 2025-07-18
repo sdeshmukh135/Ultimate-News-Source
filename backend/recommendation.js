@@ -31,6 +31,7 @@ const getUserNews = async (req) => {
     newArticle.score = art.score;
     newArticle.bookmarked = art.bookmarked;
     newArticle.addTagInput = art.addTagInput;
+    newArticle.canvasData = art.canvasData;
 
     personalNews.push(newArticle);
   }
