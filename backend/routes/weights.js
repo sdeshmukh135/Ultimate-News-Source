@@ -20,6 +20,7 @@ router.post("/add-weight", async (req, res) => {
       signal: signal,
       weight: parseFloat(weight),
       updatedLast: new Date(),
+      user: { connect: { id: req.session.userId } },
     },
   });
 
@@ -32,8 +33,17 @@ router.put("/:signal/update-weight", async (req, res) => {
   const signal = req.params.signal;
   const { weight } = req.body; // the update
 
+  const original = await prisma.engagementWeight.findFirst({
+    where: {
+      signal: signal,
+      userId: req.session.userId,
+    },
+  });
+
   const updatedEngagement = await prisma.engagementWeight.update({
-    where: { signal: signal },
+    where: {
+      id: original.id,
+    },
     data: {
       weight: weight,
     },
@@ -41,6 +51,13 @@ router.put("/:signal/update-weight", async (req, res) => {
 
   const weights = await prisma.engagementWeight.findMany();
   res.status(201).json(weights);
+});
+
+// delete current weights (testing purposes)
+router.delete("/delete", async (req, res) => {
+  const deleted = await prisma.engagementWeight.deleteMany();
+
+  res.json({ message: "Deleted Successfully" });
 });
 
 module.exports = router;
