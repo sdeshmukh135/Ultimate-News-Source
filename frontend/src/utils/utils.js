@@ -24,3 +24,10 @@ export const CATEGORIES = {
   FOOD: "food",
   TRAVEL: "travel",
 }
+
+export const TOOLS = {
+  TEXTBOX : "textbox",
+  DRAW: "draw",
+  HIGHLIGHT : "highlight",
+  DELETE : "delete"
+}

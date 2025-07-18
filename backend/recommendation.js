@@ -31,6 +31,7 @@ const getUserNews = async (req) => {
     newArticle.score = art.score;
     newArticle.bookmarked = art.bookmarked;
     newArticle.addTagInput = art.addTagInput;
+    newArticle.canvasData = art.canvasData;
 
     personalNews.push(newArticle);
   }
@@ -98,10 +99,59 @@ const createPersonalizedNews = async (req, news, rankings) => {
   }
 };
 
+const changeEnagagementWeights = async (req) => {
+  const interactions = await prisma.userInteraction.findMany({ // all interactions
+    where : {userId : req.session.userId}
+  });
+
+  const prevWeights = await prisma.engagementWeight.findMany({
+    where : {userId : req.session.userId}
+  })
+
+  if (prevWeights[0].updatedLast.toDateString() === (new Date()).toDateString()) { // only want it to update daily
+    return; // not updating
+  }
+
+  // aggregate count, then update the weightage based on the proportion of engagament comes from that specific engagement
+  let openCount = 0;
+  let readCount = 0;
+  let likeCount = 0;
+  let voteCount = 0;
+  for (const interaction of interactions) {
+    openCount += interaction.openCount;
+    readCount += interaction.readCount;
+    likeCount = (interaction.isLiked) ? likeCount + 1 : likeCount;
+    voteCount = (interaction.voted) ? voteCount + 1 : voteCount;
+  }
+
+  const totalCount = openCount + readCount + likeCount + voteCount;
+
+  const weights = {
+    openCount : openCount / totalCount, // proportion of engagement done by this signal
+    readCount : readCount / totalCount,
+    isLiked : likeCount / totalCount,
+    voted : voteCount / totalCount,
+  } 
+
+  for (const signalWeight of prevWeights) {
+    const signal = signalWeight.signal;
+
+    const updatedWeight = await prisma.engagementWeight.update({
+      where : {id : signalWeight.id},
+      data : {
+        weight : (signalWeight.weight + weights[signal]).toFixed(2),
+        updatedLast : new Date()
+      }
+    })
+  }
+}
+
 const calculateEngagement = async (req) => {
   const interactions = await prisma.userInteraction.findMany({
     where: { userId: req.session.userId },
   });
+
+  await changeEnagagementWeights(req);
 
   for (const interaction of interactions) {
     // get article

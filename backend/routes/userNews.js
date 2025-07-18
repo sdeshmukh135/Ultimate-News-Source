@@ -284,13 +284,40 @@ router.post("/personalized", async (req, res) => {
       topRankings[i] = polled.id;
     }
 
-    await createPersonalizedNews(req, notUsedNews, topRankings);
+    // await createPersonalizedNews(req, notUsedNews, topRankings);
 
-    const personalizedNews = await getUserNews(req);
+    // const personalizedNews = await getUserNews(req);
 
-    res.status(201).json(personalizedNews);
+    res.status(201).json(topRankings);
   } catch (error) {
     res.status(500).json({ error: "Could not created personalized feed" });
+  }
+});
+
+// update canvas data
+router.put("/:newsId/update-canvas", async (req, res) => {
+  const { data } = req.body; // the canvas data in JSON format
+  const newsid = req.params.newsId;
+
+  try {
+    const article = await prisma.userNewsCache.findFirst({
+      where: {
+        userId: req.session.userId,
+        newsId: parseInt(newsid),
+      },
+    });
+
+    const updatedCanvas = await prisma.userNewsCache.update({
+      where: { id: article.id },
+      data: {
+        canvasData: data,
+      },
+    });
+
+    const personalNews = await getUserNews(req);
+    res.status(200).json(personalNews);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update canvas data" });
   }
 });
 

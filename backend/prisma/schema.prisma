@@ -19,6 +19,7 @@ model User {
   password String
   interactions UserInteraction[] // user interactions per article (signals)
   userNews UserNewsCache[]
+  weights EngagementWeight[]
 }
 
 model UserInteraction {
@@ -43,6 +44,7 @@ model UserNewsCache {
   score Float // engagement score
   addedTime DateTime
   addTagInput Boolean // whether the user added their input for this specific article
+  canvasData Json? // annotations on the article
 }
 
 model Stock {
@@ -86,8 +88,10 @@ model GlobalInteraction { // aggregated engagement signals per news across users
 model EngagementWeight { // makes weights dynamic and flexible
   id       Int    @id @default(autoincrement())
   signal String
-  weight Int
+  weight Float
   updatedLast DateTime @default(now()) // just in case we need to update the weights
+  userId Int
+  user User? @relation(fields : [userId], references : [id])
 }
 
 model Feature {
