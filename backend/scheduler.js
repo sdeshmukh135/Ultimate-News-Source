@@ -3,52 +3,50 @@ const prisma = new PrismaClient();
 
 // functions for scheduling algorithm
 
-const aggregateMetrics = async () => {
-  const metrics = await prisma.userInteraction.findMany();
+const findOnlineTimes = async () => {
+  const users = await prisma.user.findMany(); // all users
 
-  // TO-DO: delete previous aggregations before aggregating the metrics again- until there is a timestamp on when every interaction was last updated
-
-  for (const interaction of metrics) {
-    const article = await prisma.globalInteraction.findFirst({
-      where: { newsId: interaction.newsId },
-    });
-
-    const newsArticle = await prisma.news.findFirst({
-      where: { id: interaction.newsId },
-    });
-
-    if (article != null) {
-      // the article is already present
-      const updatedInteraction = await prisma.globalInteraction.update({
-        where: { id: article.id },
-        data: {
-          openCount: interaction.openCount + article.openCount,
-          readCount: interaction.readCount + article.readCount,
-          likedCount: article.isLiked
-            ? article.likedCount + 1
-            : article.likedCount,
-        },
-      });
-    } else {
-      // article is not a part of the interactions yet
-      const newInteraction = await prisma.globalInteraction.create({
-        data: {
-          // will add onto with more users
-          news: { connect: { id: interaction.newsId } },
-          openCount: interaction.openCount,
-          readCount: interaction.readCount,
-          likedCount: interaction.isLiked ? 1 : 0,
-          publishedDayOfWeek: newsArticle.releasedAt.getDay(),
-          publishedTime: newsArticle.releasedAt.getHours(),
-          score: 0.0, // default-- will add score later
-        },
-      });
+  const loginTimes = {}; // time and count (if applicable)
+  for (const user in users) {
+    let times = JSON.parse(users[user].timesOnline);
+    if (times === null) {
+      continue; // not applicable
+    }
+    times = times["time"];
+    for (const time of times) {
+      const window = parseTime(
+        new Date(time).getDay(),
+        new Date(time).getHours()
+      );
+      if (loginTimes[window]) {
+        // that time exists
+        loginTimes[window]++;
+      } else {
+        // time has not been seen yet
+        loginTimes[window] = 1; // first instance
+      }
     }
   }
 
-  const allInteractions = await prisma.globalInteraction.findMany();
+  return loginTimes;
+};
 
-  return allInteractions;
+const convertToMin = (time) => {
+  const dayOfWeek = parseInt(time.slice(0, 1)); // first digit
+  const hour = parseInt(time.slice(2, 5)); // hour to post it during the day
+
+  return dayOfWeek * 24 * 60 + hour * 60; // minutes since the beginning of the week for the similiarity analysis
+};
+
+const parseTime = (day, time) => {
+  const startInterval = Math.floor(time / 2) * 2; // 2-hour window
+  const endInterval = startInterval + 1;
+
+  const window = `${day}-${startInterval
+    .toString()
+    .padStart(2, "0")}-${endInterval.toString().padStart(2, "0")}`;
+
+  return window;
 };
 
 // create date interval (Day of the week, hour) scores (group articles according to time published (same day, within two hours of each other))
@@ -60,12 +58,10 @@ const groupByDate = async (interactions) => {
       where: { id: interaction.newsId },
     });
 
-    const startInterval = Math.floor(interaction.publishedTime / 2) * 2; // 2-hour window
-    const endInterval = startInterval + 1;
-
-    const window = `${interaction.publishedDayOfWeek}-${startInterval
-      .toString()
-      .padStart(2, "0")}-${endInterval.toString().padStart(2, "0")}`;
+    const window = parseTime(
+      interaction.publishedDayOfWeek,
+      interaction.publishedTime
+    );
     if (!dateIntervals[window]) {
       // this bucket doesn't exist
       dateIntervals[window] = {
@@ -145,9 +141,38 @@ const groupByCategory = (dateIntervals) => {
   return categoriesOfTime;
 };
 
+const findWeightedScores = async (topEngagementScores) => {
+  // weighted by similarity to popular user times
+  const loginTimes = await findOnlineTimes();
+
+  const finalizedTimes = {};
+
+  for (const [interval, score] of topEngagementScores) {
+    let weight = 0;
+    for (const time in loginTimes) {
+      const sim = similiarityAnalysis(time, interval, 0.01);
+      weight += sim * loginTimes[time]; // where loginTimes[time] is the frequency of the time interval
+    }
+
+    finalizedTimes[interval] = (parseFloat(score) * weight).toFixed(2); // weighted score
+  }
+
+  return finalizedTimes;
+};
+
+const similiarityAnalysis = (time1, time2, decay = 0.01) => {
+  // comparing with the highest engagement scores and intervals from categories
+  // how similiar are the timings to the login times (want to be as close as possible to be a part of the fresh feed)
+  // more similiar, weight is higher (exponential decay)
+  const diff = Math.abs(convertToMin(time1) - convertToMin(time2));
+  return Math.exp(-decay * diff);
+};
+
 module.exports = {
-  aggregateMetrics,
   groupByCategory,
   groupByDate,
   getCategoryEngagement,
+  findWeightedScores,
+  parseTime,
+  convertToMin,
 };

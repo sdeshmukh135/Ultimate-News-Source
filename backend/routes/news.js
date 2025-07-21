@@ -6,10 +6,12 @@ const prisma = new PrismaClient();
 
 const { getUserNews } = require("../recommendation");
 const {
-  aggregateMetrics,
   groupByDate,
   groupByCategory,
   getCategoryEngagement,
+  findWeightedScores,
+  parseTime,
+  convertToMin,
 } = require("../scheduler");
 
 const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
@@ -251,18 +253,24 @@ router.post("/add-new-news", async (req, res) => {
 
   const currentDate = new Date();
   const currentDay = currentDate.getDay();
-  let dayOffset = parseInt(timeToSchedule.slice(0, 1)) - currentDay;
+  let scheduledDate = null;
+  if (timeToSchedule === "") {
+    // a time has been provided
+    scheduledDate = new Date(); // default time to post is RIGHT NOW
+  } else {
+    let dayOffset = parseInt(timeToSchedule.slice(0, 1)) - currentDay;
 
-  if (dayOffset < 0) {
-    // the day during the week has already passed
-    dayOffset += 7; // next week
+    if (dayOffset < 0) {
+      // the day during the week has already passed
+      dayOffset += 7; // next week
+    }
+
+    scheduledDate = new Date();
+
+    scheduledDate.setDate(currentDate.getDate() + dayOffset);
+
+    scheduledDate.setHours(parseInt(timeToSchedule.slice(2, 5)), 0, 0, 0); // the specific hour
   }
-
-  const scheduledDate = new Date(currentDate);
-
-  scheduledDate.setDate(currentDate.getDate() + dayOffset);
-
-  scheduledDate.setHours(parseInt(timeToSchedule.slice(2, 5)), 0, 0, 0); // the specific hour
 
   // schedule the job
   try {
@@ -291,9 +299,9 @@ router.post("/add-new-news", async (req, res) => {
 
 // create new posts (schedule when to create them)
 router.post("/find-times", async (req, res) => {
-  const { categories, deadline, title, url, imageURL } = req.body; // user input (hardcoded for now for testing)
+  const { categories, deadline } = req.body; // user input (hardcoded for now for testing)
   try {
-    const interactions = await aggregateMetrics();
+    const interactions = await prisma.globalInteraction.findMany(); // already aggregated (instantly with every update to user signals)
 
     for (const interaction of interactions) {
       // calculate engagement scores (hardcoded weights, will make dynamic)
@@ -332,7 +340,7 @@ router.post("/find-times", async (req, res) => {
     }
 
     // get the time options and scores of the categories that match the user's categories
-    let options = {}; // TO-DO: change options to a priority queue to take top 3 options much more efficiently
+    let options = {};
     for (const category of categories) {
       for (const interval in categoriedTimes[category]) {
         options[interval] = categoriedTimes[category][interval].score;
@@ -340,9 +348,41 @@ router.post("/find-times", async (req, res) => {
     }
 
     options = Object.entries(options);
-    options = options.sort((a, b) => b[1] - a[1]).slice(0, 3); // top three options, change operation with priority queue
+    options = options.sort((a, b) => b[1] - a[1]);
 
-    res.status(200).json(options); // best time intervals to post article
+    let results = await findWeightedScores(options);
+
+    results = Object.entries(results);
+    results = results.sort((a, b) => b[1] - a[1]);
+
+    let deadlineWindow = 0;
+
+    if (deadline === null) {
+      // no deadline has been chosen
+      deadlineWindow = convertToMin(new Date().getDay(), new Date().getHours());
+    } else {
+      deadlineWindow = convertToMin(
+        parseTime(new Date(deadline).getDay(), new Date(deadline).getHours())
+      ); // scheduled times cannot pass this
+    }
+
+    let chosenDates = [];
+    let count = 0; // want top 3
+
+    for (const date of results) {
+      const choice = convertToMin(date[0]);
+      if (choice < deadlineWindow) {
+        // date is less than the deadline
+        chosenDates.push(date);
+        count += 1;
+      }
+
+      if (count === 3) {
+        break;
+      }
+    }
+
+    res.status(200).json(chosenDates); // best time intervals to post article
   } catch (error) {
     res.status(500).json({ error: "something went wrong with finding times" });
   }
