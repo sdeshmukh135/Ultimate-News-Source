@@ -20,6 +20,7 @@ model User {
   interactions UserInteraction[] // user interactions per article (signals)
   userNews UserNewsCache[]
   weights EngagementWeight[]
+  timesOnline Json? // times a user is online
 }
 
 model UserInteraction {
@@ -45,6 +46,7 @@ model UserNewsCache {
   addedTime DateTime
   addTagInput Boolean // whether the user added their input for this specific article
   canvasData Json? // annotations on the article
+  timeOpened DateTime? // time user opened the article
 }
 
 model Stock {

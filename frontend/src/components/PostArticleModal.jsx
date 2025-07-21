@@ -2,6 +2,7 @@ import "../styles/modal.css";
 import { useState } from "react";
 import LoadingGif from "../assets/loading.gif";
 import { CATEGORIES } from "../utils/utils.js";
+import Calender from 'react-calendar'
 
 const PostArticleModal = ({ setOpenPostModal }) => {
   const [post, setPost] = useState({
@@ -12,6 +13,7 @@ const PostArticleModal = ({ setOpenPostModal }) => {
     timeToSchedule: "", // scheduling system for this
   });
   const [isLoading, setLoading] = useState(false); // loading state
+  const [deadline, setDeadline] = useState(new Date()); // default deadline is right now (no scheduling for later)
   const [successMessage, setSuccessMessage] = useState(""); // to prove the post has been scheduled (because there is no instant reaction)
   const [selectedTime, setSelectedTime] = useState("");
   const [timeOptions, setTimeOptions] = useState([]); // the options
@@ -53,6 +55,7 @@ const PostArticleModal = ({ setOpenPostModal }) => {
   const handlePost = (event) => {
     event.preventDefault();
     // update the post data
+
     fetch(`http://localhost:3000/news/add-new-news`, {
       method: "POST",
       headers: {
@@ -66,6 +69,7 @@ const PostArticleModal = ({ setOpenPostModal }) => {
         imageURL: post.imageURL,
         categories: post.categories,
         timeToSchedule: post.timeToSchedule,
+        
       }),
     })
       .then((response) => {
@@ -96,7 +100,6 @@ const PostArticleModal = ({ setOpenPostModal }) => {
 
   const handleScheduling = () => {
     setLoading(true); // loading
-
     fetch(`http://localhost:3000/news/find-times`, {
       method: "POST",
       headers: {
@@ -105,10 +108,8 @@ const PostArticleModal = ({ setOpenPostModal }) => {
       },
       credentials: "include",
       body: JSON.stringify({
-        title: post.title,
-        url: post.url,
-        imageURL: post.imageURL,
         categories: post.categories,
+        deadline : deadline,
       }),
     })
       .then((response) => {
@@ -192,6 +193,9 @@ const PostArticleModal = ({ setOpenPostModal }) => {
               return <option value={category.toLowerCase()}>{category}</option>;
             })}
           </select>
+
+          <label htmlFor="deadline">Select a Deadline:</label>
+          <Calender onChange={setDeadline} value={deadline} required/>
           <button
             type="button"
             id="handleScheduling"

@@ -284,11 +284,11 @@ router.post("/personalized", async (req, res) => {
       topRankings[i] = polled.id;
     }
 
-    // await createPersonalizedNews(req, notUsedNews, topRankings);
+    await createPersonalizedNews(req, notUsedNews, topRankings);
 
-    // const personalizedNews = await getUserNews(req);
+    const personalizedNews = await getUserNews(req);
 
-    res.status(201).json(topRankings);
+    res.status(201).json(personalizedNews);
   } catch (error) {
     res.status(500).json({ error: "Could not created personalized feed" });
   }

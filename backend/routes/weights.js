@@ -45,7 +45,7 @@ router.put("/:signal/update-weight", async (req, res) => {
       id: original.id,
     },
     data: {
-      weight: weight,
+      weight: parseFloat(weight),
     },
   });
 

@@ -4,7 +4,7 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// get the gloabl interactions
+// get the global interactions
 router.get("/", async (req, res) => {
   const interactions = await prisma.globalInteraction.findMany();
   res.status(200).json(interactions);

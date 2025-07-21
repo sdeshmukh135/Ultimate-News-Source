@@ -32,6 +32,7 @@ const getUserNews = async (req) => {
     newArticle.bookmarked = art.bookmarked;
     newArticle.addTagInput = art.addTagInput;
     newArticle.canvasData = art.canvasData;
+    newArticle.timeOpened = art.timeOpened;
 
     personalNews.push(newArticle);
   }
@@ -139,7 +140,7 @@ const changeEnagagementWeights = async (req) => {
     const updatedWeight = await prisma.engagementWeight.update({
       where : {id : signalWeight.id},
       data : {
-        weight : (signalWeight.weight + weights[signal]).toFixed(2),
+        weight : parseFloat((signalWeight.weight + weights[signal]).toFixed(2)),
         updatedLast : new Date()
       }
     })

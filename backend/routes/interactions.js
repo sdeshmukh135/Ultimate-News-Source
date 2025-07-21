@@ -27,6 +27,12 @@ router.post("/:newsId/:signal", async (req, res) => {
   const signal = req.params.signal;
   const { updatedSignal } = req.body; // only necessary for bookmarking (is boolean)
   let { opened, read, liked } = false; // to figure out which signal is being refered to
+
+  // update global count
+  const globalInteraction = await prisma.globalInteraction.findFirst({
+    where: { newsId: newsid },
+  });
+
   if (signal === "open") {
     opened = true;
   } else if (signal === "read") {
@@ -36,14 +42,28 @@ router.post("/:newsId/:signal", async (req, res) => {
   }
 
   try {
-    const userSignals = await prisma.userInteraction.findMany({
+    const userSignals = await prisma.userInteraction.findFirst({
       where: {
         userId: req.session.userId,
         newsId: newsid,
       },
     });
 
-    if (userSignals.length == 0) {
+    if (opened) {
+      // for the time stamp on userNewsCache
+      const article = await prisma.userNewsCache.findFirst({
+        where: { newsId: newsid },
+      });
+
+      const updatedArticle = await prisma.userNewsCache.update({
+        where: { id: article.id },
+        data: {
+          timeOpened: new Date(), // right now (most recent open)
+        },
+      });
+    }
+
+    if (!userSignals) {
       // empty, no interactions on this article yet
       const addSignals = await prisma.userInteraction.create({
         data: {
@@ -52,37 +72,63 @@ router.post("/:newsId/:signal", async (req, res) => {
           openCount: opened ? 1 : 0, // 0 is default
           readCount: read ? 1 : 0,
           isLiked: liked ? Boolean(updatedSignal) : false, // false is default
+          voted: false, // default
         },
       });
     } else {
-      if (opened) {
-        const updateSignal = await prisma.userInteraction.update({
-          where: {
-            id: userSignals[0].id,
-            userId: req.session.userId,
-            newsId: newsid,
-          },
-          data: { openCount: userSignals[0].openCount + 1 },
-        });
-      } else if (read) {
-        const updateSignal = await prisma.userInteraction.update({
-          where: {
-            id: userSignals[0].id,
-            userId: req.session.userId,
-            newsId: newsid,
-          },
-          data: { readCount: userSignals[0].readCount + 1 },
-        });
-      } else {
-        const updateSignal = await prisma.userInteraction.update({
-          where: {
-            id: userSignals[0].id,
-            userId: req.session.userId,
-            newsId: newsid,
-          },
-          data: { isLiked: Boolean(updatedSignal) },
-        });
-      }
+      const updateSignal = await prisma.userInteraction.update({
+        where: {
+          id: userSignals.id,
+          userId: req.session.userId,
+          newsId: newsid,
+        },
+        data: {
+          openCount: opened ? userSignals.openCount + 1 : userSignals.openCount,
+          readCount: read ? userSignals.readCount + 1 : userSignals.readCount,
+          isLiked: liked ? Boolean(updatedSignal) : userSignals.isLiked,
+        },
+      });
+    }
+
+    // update global count (parallel to collecting user-based signals)
+    const globalInteraction = await prisma.globalInteraction.findFirst({
+      where: { newsId: newsid },
+    });
+
+    if (globalInteraction) {
+      const updatedInteraction = await prisma.globalInteraction.update({
+        // update the global interaction when there is a change interactions
+        where: { id: globalInteraction.id },
+        data: {
+          openCount: opened
+            ? globalInteraction.openCount + 1
+            : globalInteraction.openCount,
+          readCount: read
+            ? globalInteraction.readCount + 1
+            : globalInteraction.readCount,
+          likedCount: liked
+            ? globalInteraction.likedCount + 1
+            : globalInteraction.likedCount,
+        },
+      });
+    } else {
+      const article = await prisma.news.findFirst({
+        where: { id: newsid },
+      });
+
+      const newInteraction = await prisma.globalInteraction.create({
+        // new interaction in general
+        data: {
+          // will add onto with more users
+          news: { connect: { id: newsid } },
+          openCount: opened ? 1 : 0,
+          readCount: read ? 1 : 0,
+          likedCount: liked ? 1 : 0,
+          publishedDayOfWeek: article.releasedAt.getDay(),
+          publishedTime: article.releasedAt.getHours(),
+          score: 0.0, // default-- will add score later
+        },
+      });
     }
 
     // return the list of interaction for the user

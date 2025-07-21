@@ -92,6 +92,33 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "invalid username or password" });
     }
 
+    const timeLoggedIn = new Date();
+    if (!oldUser.timesOnline) {
+      // no times so far
+      const timeOnline = {
+        time: [timeLoggedIn],
+      };
+      const updatedTime = await prisma.user.update({
+        where: { id: oldUser.id },
+        data: {
+          timesOnline: JSON.stringify(timeOnline),
+        },
+      });
+    } else {
+      // there are times
+      let prevTimes = JSON.parse(oldUser.timesOnline)["time"];
+      prevTimes.push(timeLoggedIn); // array of times user has logged on
+      const timeOnline = {
+        time : prevTimes,
+      }
+      const updatedTime = await prisma.user.update({
+        where: { id: oldUser.id },
+        data: {
+          timesOnline: JSON.stringify(timeOnline),
+        },
+      });
+    }
+
     req.session.userId = oldUser.id;
     req.session.username = oldUser.username;
     res.json({ id: oldUser.id, username: oldUser.username }); // returning userId and username of the session
