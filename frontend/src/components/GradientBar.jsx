@@ -7,7 +7,7 @@ const GradientBar = ({ article }) => {
 
   const gradient = {
     // CSS styling using percentages
-    width: "390px",
+    width: "330px",
     height: "30px",
     borderRadius: "5px",
     background:

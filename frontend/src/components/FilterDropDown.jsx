@@ -6,6 +6,7 @@ const FilterDropDown = ({ setFilterOption }) => {
   const [openSubOptions, setOpenSuboptions] = useState({
     isRecent: false,
     isCategory: false,
+    isSentiment: false,
   }); // suboptions are closed as well (for the two categories with sub-options)
 
   const getFilter = (filterType) => {
@@ -31,8 +32,8 @@ const FilterDropDown = ({ setFilterOption }) => {
           SubFilters.TECH,
           SubFilters.TRAVEL,
         ];
-      case Filters.REGION:
       case Filters.SENTIMENT:
+        return [SubFilters.POSITIVE, SubFilters.NEGATIVE];
       case Filters.NONE:
     }
   };
@@ -49,7 +50,7 @@ const FilterDropDown = ({ setFilterOption }) => {
             >
               {category}
             </button>
-          ),
+          )
       )}
     </ul>
   );
@@ -60,6 +61,7 @@ const FilterDropDown = ({ setFilterOption }) => {
         ...prev,
         isRecent: false,
         isCategory: false,
+        isSentiment: false,
       })); // close this to
     }
     setOpenDropDown(!openDropDown);
@@ -75,6 +77,11 @@ const FilterDropDown = ({ setFilterOption }) => {
       setOpenSuboptions((prev) => ({
         ...prev,
         isRecent: !openSubOptions.isRecent,
+      }));
+    } else if (category === "sentiment") {
+      setOpenSuboptions((prev) => ({
+        ...prev,
+        isSentiment: !openSubOptions.isSentiment,
       }));
     } else {
       // options without suboptions (clicking on it is all you need to do)
@@ -110,7 +117,7 @@ const FilterDropDown = ({ setFilterOption }) => {
               >
                 {category}
               </button>
-            ),
+            )
         )}
       </ul>
     );
@@ -124,6 +131,9 @@ const FilterDropDown = ({ setFilterOption }) => {
         ? SubFilterTypeButtons(Filters.CATEGORY)
         : null}
       {openSubOptions.isRecent ? SubFilterTypeButtons(Filters.RECENT) : null}
+      {openSubOptions.isSentiment
+        ? SubFilterTypeButtons(Filters.SENTIMENT)
+        : null}
     </div>
   );
 };

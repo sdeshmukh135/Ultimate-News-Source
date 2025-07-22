@@ -13,13 +13,13 @@ export const SubFilters = {
   POLITICS: "politics",
   FOOD: "food",
   TRAVEL: "travel",
+  POSITIVE: "POSITIVE",
+  NEGATIVE: "NEGATIVE",
 };
 
 export const Filters = {
   NONE: "none",
   CATEGORY: "category",
   RECENT: "recent",
-  REGION: "region",
   SENTIMENT: "sentiment",
-  // maybe relavence-- need to figure out how to calculate this though
 };
