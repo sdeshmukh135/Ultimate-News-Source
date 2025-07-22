@@ -7,6 +7,7 @@ import NavBar from "./components/NavBar.jsx";
 import HomePage from "./components/HomePage.jsx";
 import WithAuth from "./components/WithAuth.jsx";
 import FeaturedPage from "./components/FeaturedPage.jsx";
+import ReadLaterPage from "./components/ReadLaterPage.jsx";
 import "./App.css";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
   // only those logged in should be able to access these pages
   const ProtectedHomePage = WithAuth(HomePage);
   const ProtectedFeaturedPage = WithAuth(FeaturedPage);
+  const ProtectedReadLaterPage = WithAuth(ReadLaterPage);
 
   // set the user (whenever a new user is logged in)
   useEffect(() => {
@@ -37,6 +39,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/news" element={<ProtectedHomePage />} />
           <Route path="/featured" element={<ProtectedFeaturedPage />} />
+          <Route path="/readLater" element={<ProtectedReadLaterPage />} />
         </Routes>
 
         <footer>@2025 Veritas</footer>

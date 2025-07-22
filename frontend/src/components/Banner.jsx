@@ -4,7 +4,7 @@ import { useState } from "react";
 import PlusSign from "/src/assets/plusSign.png";
 import PostArticleModal from "./PostArticleModal.jsx";
 
-const Banner = ({ setFilterOption, setNewsData }) => {
+const Banner = ({ setFilterOption, setNewsData, setLoading }) => {
   // ONLY visible to those logged in
   const [openPostModal, setOpenPostModal] = useState(false);
 
@@ -14,7 +14,7 @@ const Banner = ({ setFilterOption, setNewsData }) => {
 
   const handleRefresh = () => {
     // refresh for personalized news (must update engagement scores and send personalized news back to screen)
-
+    setLoading(true);
     // get personalized news
     fetch(`http://localhost:3000/user-news/personalized`, {
       method: "POST",
@@ -32,6 +32,7 @@ const Banner = ({ setFilterOption, setNewsData }) => {
       })
       .then((data) => {
         setNewsData(data);
+        setLoading(false); // no longer loading now that there is data
       })
       .catch((error) => {
         console.error("Error creating personalized news: ", error);
@@ -43,12 +44,15 @@ const Banner = ({ setFilterOption, setNewsData }) => {
       <h2>News for You</h2>
       <button onClick={handleRefresh}>Refresh Feed</button>
       <FilterDropDown setFilterOption={setFilterOption} />
-      <img
-        className="plus-sign"
-        src={PlusSign}
-        alt="plus sign"
-        onClick={openModal}
-      />
+      <div className="plusToolTip">
+        <img
+          className="plus-sign"
+          src={PlusSign}
+          alt="plus sign"
+          onClick={openModal}
+        />
+        <span className="tooltip-text">Post an Article of Your Own!</span>
+      </div>
       {openPostModal && (
         <PostArticleModal setOpenPostModal={setOpenPostModal} />
       )}

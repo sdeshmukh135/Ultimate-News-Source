@@ -62,7 +62,18 @@ const NewsComponent = ({
   };
 
   return (
-    <div className="newsComponent" onClick={openModal}>
+    <div
+      className="newsComponent"
+      onClick={openModal}
+      style={{
+        backgroundImage: `url(${
+          article.imageURL ? article.imageURL : DefaultNewsImage
+        })`,
+        backgroundSize: "cover",
+        backgroundPosition: "center center",
+        border: "2px solid #9e0b0f",
+      }}
+    >
       {article.bookmarked ? (
         <img
           className="readLater"
@@ -78,6 +89,7 @@ const NewsComponent = ({
           onClick={handleBookmark}
         />
       )}
+
       <div className="newsContent">
         {article.imageURL ? (
           <img

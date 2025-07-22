@@ -33,6 +33,11 @@ const RecentFilters = {
   GENERAL: "general",
 };
 
+const SentimentFilters = {
+  POSITIVE: "POSITIVE",
+  NEGATIVE: "NEGATIVE",
+};
+
 const getSimiliarity = (userCategories, articleCategories) => {
   let intersection = new Set(
     [...articleCategories].filter((e) => userCategories.includes(e))
@@ -59,34 +64,50 @@ router.get("/", async (req, res) => {
 
 router.get("/filter-news/:type", async (req, res) => {
   const chosenFilter = req.params.type;
+  let originalNews = await getUserNews(req);
   let filteredNews = [];
   // filter news accordingly
   try {
     if (Object.values(Categories).includes(chosenFilter)) {
       // this is a category filter
-      filteredNews = await prisma.userNewsCache.findMany({
-        where: {
-          category: {
-            has: chosenFilter,
-          },
-        },
-        orderBy: {
-          releasedAt: "desc",
-        },
+      filteredNews = originalNews.filter(function (object) {
+        return object.category.includes(chosenFilter);
       });
-    } else if (Object.values(RecentFilters).includes(req.params.type)) {
-      // TO-DO: Update when more data is added to database
-    } else if (req.params.type === "region") {
-      // TO-DO: update after region tagging is complete
-    } else if (req.params.type === "sentiment") {
-      // TO-DO: sentiment--> update after tagging is complete
+    } else if (Object.values(RecentFilters).includes(chosenFilter)) {
+      if (chosenFilter === "today") {
+        const date = new Date().toDateString(); // today's date
+        filteredNews = originalNews.filter(function (object) {
+          return object.releasedAt.toDateString() === date;
+        });
+      } else if (chosenFilter === "last week") {
+        const startOfWeek = new Date();
+        startOfWeek.setDate(
+          startOfWeek.getDate() -
+            (startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1)
+        ); // to get the date of the most recent Monday
+        startOfWeek.setHours(0, 0, 0, 0); // beginning of Monday
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999); // end of end of week
+        filteredNews = originalNews.filter(function (object) {
+          return (
+            object.releasedAt >= startOfWeek && object.releasedAt <= endOfWeek
+          );
+        });
+      } else {
+        // past year
+        const date = new Date().getFullYear();
+        filteredNews = originalNews.filter(function (object) {
+          return object.releasedAt.getFullYear() === date;
+        });
+      }
+    } else if (Object.values(SentimentFilters).includes(chosenFilter)) {
+      filteredNews = originalNews.filter(function (object) {
+        return object.sentiment[0].label === chosenFilter;
+      });
     } else {
       // last option "none" --> fetch original data
-      filteredNews = await prisma.userNewsCache.findMany({
-        orderBy: {
-          releasedAt: "desc",
-        },
-      });
+      filteredNews = originalNews;
     }
 
     res.status(201).json(filteredNews);
@@ -319,6 +340,37 @@ router.put("/:newsId/update-canvas", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to update canvas data" });
   }
+});
+
+// get bookmarked news
+router.get("/bookmarked", async (req, res) => {
+  const bookmarkedNews = await prisma.userNewsCache.findMany({
+    where: {
+      userId: req.session.userId,
+      bookmarked: true,
+    },
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  const personalNews = [];
+  // there are entries found
+  for (const art of bookmarkedNews) {
+    const newArticle = await prisma.news.findFirst({
+      where: { id: art.newsId },
+    });
+
+    newArticle.score = art.score;
+    newArticle.bookmarked = art.bookmarked;
+    newArticle.addTagInput = art.addTagInput;
+    newArticle.canvasData = art.canvasData;
+    newArticle.timeOpened = art.timeOpened;
+
+    personalNews.push(newArticle);
+  }
+
+  res.status(200).json(personalNews);
 });
 
 // delete news from the cache

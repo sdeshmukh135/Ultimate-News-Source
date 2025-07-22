@@ -34,6 +34,10 @@ const NavBar = () => {
         <Link to="/featured">
           <header>Featured</header>
         </Link>
+
+        <Link to="/readLater">
+          <header>Read Later</header>
+        </Link>
       </div>
 
       <div className="auth-links">

@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { TOOLS } from "../utils/utils";
 import * as fabric from "fabric"; // v6
-import Pen from "/src/assets/pen.png"
 
 const Whiteboard = ({ id, canvasData, setNewsData }) => {
   const canvasEl = useRef(null);
@@ -112,7 +111,7 @@ const Whiteboard = ({ id, canvasData, setNewsData }) => {
 
   return (
     <div className="whiteboardStuff">
-      <canvas width="600" height="400" ref={canvasEl} style={{cursor: `url(${Pen}), auto`}}/>
+      <canvas width="600" height="600" ref={canvasEl} />
       <Toolbar />
     </div>
   );
