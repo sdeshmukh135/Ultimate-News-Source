@@ -54,7 +54,7 @@ const Login = () => {
               return response.json();
             })
             .catch((error) => {
-              console.error("Error creating personalized news: ", error);
+              console.error("Error updating login-logout times: ", error);
             });
         }, warningTime);
 
