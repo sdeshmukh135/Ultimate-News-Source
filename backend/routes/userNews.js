@@ -335,6 +335,35 @@ router.put("/:newsId/update-canvas", async (req, res) => {
       },
     });
 
+    const interactionTimes = await prisma.interactionTime.findFirst({
+      where: { newsId: parseInt(newsid) },
+    });
+    if (interactionTimes) {
+      // this exists
+      let timesAno = interactionTimes.timeAnnotated.push(new Date());
+      timesAno = interactionTimes.timeAnnotated;
+
+      const updatedTimes = await prisma.interactionTime.update({
+        where: {
+          id: interactionTimes.id,
+        },
+        data: {
+          timeAnnotated: timesAno,
+        },
+      });
+    } else {
+      const addTimes = await prisma.interactionTime.create({
+        data: {
+          news: { connect: { id: newsid } }, // news id
+          timeOpened: [],
+          timeRead: [],
+          timeBookmarked: [],
+          timeAnnotated: [new Date()],
+          timeVoted: [], // not tested here
+        },
+      });
+    }
+
     const personalNews = await getUserNews(req);
     res.status(200).json(personalNews);
   } catch (error) {

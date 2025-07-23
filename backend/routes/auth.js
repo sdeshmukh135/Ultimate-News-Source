@@ -109,8 +109,8 @@ router.post("/login", async (req, res) => {
       let prevTimes = JSON.parse(oldUser.timesOnline)["time"];
       prevTimes.push(timeLoggedIn); // array of times user has logged on
       const timeOnline = {
-        time : prevTimes,
-      }
+        time: prevTimes,
+      };
       const updatedTime = await prisma.user.update({
         where: { id: oldUser.id },
         data: {
@@ -128,7 +128,38 @@ router.post("/login", async (req, res) => {
 });
 
 // logout
-router.post("/logout", (req, res) => {
+router.post("/logout", async (req, res) => {
+  const oldUser = await prisma.user.findUnique({
+    where: { id: req.session.userId },
+  });
+
+  const timeLoggedOut = new Date(); // right now
+  if (!oldUser.logOutTimes) {
+    // to get the log out times
+    // no times so far
+    const timeOnline = {
+      time: [timeLoggedOut],
+    };
+    const updatedTime = await prisma.user.update({
+      where: { id: oldUser.id },
+      data: {
+        logOutTimes: JSON.stringify(timeOnline),
+      },
+    });
+  } else {
+    // there are times
+    let prevTimes = JSON.parse(oldUser.logOutTimes)["time"];
+    prevTimes.push(timeLoggedOut); // array of times user has logged on
+    const timeOnline = {
+      time: prevTimes,
+    };
+    const updatedTime = await prisma.user.update({
+      where: { id: oldUser.id },
+      data: {
+        logOutTimes: JSON.stringify(timeOnline),
+      },
+    });
+  }
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: "Failed to log out" });

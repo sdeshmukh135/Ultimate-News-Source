@@ -149,8 +149,6 @@ router.put("/:newsId/update-tag", async (req, res) => {
     },
   });
 
-  let updatedArticle = null;
-
   if (tagToUpdate === "leftCount") {
     updatedArticle = await prisma.news.update({
       where: {
@@ -211,11 +209,38 @@ router.put("/:newsId/update-tag", async (req, res) => {
     await prisma.userInteraction.create({
       data: {
         user: { connect: { id: req.session.userId } },
-        news: { connect: { id: newsid } }, // news id
+        news: { connect: { id: parseInt(newsid) } }, // news id
         openCount: 0, // 0 is default
         readCount: 0,
         isLiked: false, // false is default
         voted: true,
+      },
+    });
+  }
+
+  const interactionTimes = await prisma.interactionTime.findFirst({
+    where: { newsId: parseInt(newsid) },
+  });
+
+  if (interactionTimes) {
+    // this exists
+    const updatedTimes = await prisma.interactionTime.update({
+      where: {
+        id: interactionTimes.id,
+      },
+      data: {
+        timeVoted: [new Date()],
+      },
+    });
+  } else {
+    const addTimes = await prisma.interactionTime.create({
+      data: {
+        news: { connect: { id: parseInt(newsid) } }, // news id
+        timeOpened: [],
+        timeRead: [],
+        timeBookmarked: [],
+        timeAnnotated: [], // not tested here
+        timeVoted: [new Date()],
       },
     });
   }
@@ -350,10 +375,7 @@ router.post("/find-times", async (req, res) => {
     options = Object.entries(options);
     options = options.sort((a, b) => b[1] - a[1]);
 
-    let results = await findWeightedScores(options);
-
-    results = Object.entries(results);
-    results = results.sort((a, b) => b[1] - a[1]);
+    let results = await findWeightedScores(options); // priority queue (already sorted)
 
     let deadlineWindow = 0;
 
@@ -369,16 +391,13 @@ router.post("/find-times", async (req, res) => {
     let chosenDates = [];
     let count = 0; // want top 3
 
-    for (const date of results) {
-      const choice = convertToMin(date[0]);
+    while (count != 3) {
+      const date = results.poll();
+      const choice = convertToMin(date.id);
       if (choice < deadlineWindow) {
         // date is less than the deadline
-        chosenDates.push(date);
+        chosenDates.push(date.id);
         count += 1;
-      }
-
-      if (count === 3) {
-        break;
       }
     }
 

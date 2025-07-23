@@ -21,6 +21,7 @@ const cacheRoutes = require("./routes/userNews");
 const interactionRoutes = require("./routes/interactions");
 const globalRoutes = require("./routes/globalInteractions")
 const weightRoutes = require("./routes/weights")
+const interactionTimeRoutes = require("./routes/interactionTimes");
 
 app.use(express.json());
 
@@ -35,7 +36,7 @@ let sessionConfig = {
   name: "sessionId",
   secret: process.env.SECRET_KEY,
   cookie: {
-    maxAge: 1000 * 60 * 5,
+    maxAge: 1000 * 60 * 5, // five minutes (i.e. if there is no marked log out time, session expired five minutes later)
     secure: false,
     httpOnly: false,
   },
@@ -61,6 +62,7 @@ app.use("/user-news", cacheRoutes);
 app.use("/interactions", interactionRoutes);
 app.use("/global", globalRoutes);
 app.use("/weights", weightRoutes);
+app.use("/interaction-times", interactionTimeRoutes);
 
 app.listen(PORT, () => {});
 

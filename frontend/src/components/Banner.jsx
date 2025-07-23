@@ -35,6 +35,7 @@ const Banner = ({ setFilterOption, setNewsData, setLoading }) => {
         setLoading(false); // no longer loading now that there is data
       })
       .catch((error) => {
+        setLoading(false);
         console.error("Error creating personalized news: ", error);
       });
   };

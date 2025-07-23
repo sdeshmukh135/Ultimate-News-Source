@@ -1,15 +1,18 @@
 import FeaturedStockBanner from "./FeaturedStockBanner";
 import FeaturedNews from "./FeaturedNews";
 import { useState, useEffect } from "react";
+import LoadingGif from "../assets/loading.gif";
 
 const FeaturedPage = () => {
   const [featuredData, setFeaturedData] = useState(null);
+  const [isLoading, setLoading] = useState(null);
 
   useEffect(() => {
     handleFeaturedNews();
   }, []);
 
   const handleFeaturedNews = () => {
+    setLoading(true);
     fetch(`http://localhost:3000/featured`)
       .then((response) => {
         if (!response.ok) {
@@ -31,9 +34,11 @@ const FeaturedPage = () => {
           const bTime = new Date(b.releasedAt);
           return bTime.getTime() - aTime.getTime();
         });
+        setLoading(false);
         setFeaturedData(totalData); // easier to parse to screen
       })
       .catch((error) => {
+        setLoading(false);
         console.error("Error fetching featured news:", error);
       });
   };
@@ -42,6 +47,11 @@ const FeaturedPage = () => {
     <div className="featuredPage">
       <FeaturedStockBanner />
       {featuredData && <FeaturedNews featuredData={featuredData} />}
+      <div className="loading-state">
+        {isLoading && (
+          <img className="loading" src={LoadingGif} alt="Loading . . ." />
+        )}
+      </div>
     </div>
   );
 };
