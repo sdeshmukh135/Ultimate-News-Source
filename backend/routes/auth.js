@@ -4,6 +4,10 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+const {
+  addToWindows, // function to add to intervals
+} = require("../scheduler");
+
 // get all users (for testing purposes)
 router.get("/users", async (req, res) => {
   const users = await prisma.user.findMany();
@@ -134,32 +138,13 @@ router.post("/logout", async (req, res) => {
   });
 
   const timeLoggedOut = new Date(); // right now
-  if (!oldUser.logOutTimes) {
-    // to get the log out times
-    // no times so far
-    const timeOnline = {
-      time: [timeLoggedOut],
-    };
-    const updatedTime = await prisma.user.update({
-      where: { id: oldUser.id },
-      data: {
-        logOutTimes: JSON.stringify(timeOnline),
-      },
-    });
-  } else {
-    // there are times
-    let prevTimes = JSON.parse(oldUser.logOutTimes)["time"];
-    prevTimes.push(timeLoggedOut); // array of times user has logged on
-    const timeOnline = {
-      time: prevTimes,
-    };
-    const updatedTime = await prisma.user.update({
-      where: { id: oldUser.id },
-      data: {
-        logOutTimes: JSON.stringify(timeOnline),
-      },
-    });
-  }
+
+  const loginTimes = JSON.parse(oldUser.timesOnline)["time"];
+
+  const mostRecentLogin = loginTimes[loginTimes.length - 1];
+
+  addToWindows(mostRecentLogin, timeLoggedOut);
+
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: "Failed to log out" });
@@ -167,6 +152,75 @@ router.post("/logout", async (req, res) => {
     res.clearCookie("connect.sid"); // Clear session cookie
     res.json({ message: "Logged out successfully" });
   });
+});
+
+// route for before session expires
+router.post("/before-expired", async (req, res) => {
+  // same as logout but without destroying the session (will already be destroyed when it expires)
+  const oldUser = await prisma.user.findUnique({
+    where: { id: req.session.userId },
+  });
+
+  try {
+    const timeLoggedOut = new Date(); // right now
+
+    const loginTimes = JSON.parse(oldUser.timesOnline)["time"];
+
+    const mostRecentLogin = loginTimes[loginTimes.length - 1];
+
+    await addToWindows(mostRecentLogin, timeLoggedOut);
+    res.status(200).json({ message: "Added intervals successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Unable to update windows" });
+  }
+});
+
+const getRandomLoginTime = (startDate, endDate) => {
+  return new Date(
+    startDate.getTime() +
+      Math.random() * (endDate.getTime() - startDate.getTime())
+  );
+};
+
+const getRandomLogoutTime = (startHours, endHours, loginDate) => {
+  const minMs = startHours * 60 * 60 * 1000;
+  const maxMs = endHours * 60 * 60 * 1000;
+
+  const randDuration = minMs + Math.random() * (maxMs - minMs);
+  return new Date(loginDate.getTime() + randDuration);
+};
+
+// seed a bunch of interval times to test
+router.post("/seed-times", async (req, res) => {
+  const startDate = new Date(2025, 6, 1);
+  const endDate = new Date(2025, 7, 23);
+
+  try {
+    for (let i = 0; i < 40; i++) {
+      // 40 random intervals
+      const loginTime = getRandomLoginTime(startDate, endDate);
+      const logoutTime = getRandomLogoutTime(1, 5, loginTime);
+
+      await addToWindows(loginTime, logoutTime);
+    }
+
+    const times = await prisma.onlineTime.findMany();
+    res.status(200).json(times);
+  } catch (error) {
+    res.status(500).json({ error: "Unable to seed login-logout times" });
+  }
+});
+
+// clear existing login times
+router.delete("/delete-login-times", async (req, res) => {
+  const updateLogin = await prisma.user.update({
+    where: { id: req.session.userId },
+    data: {
+      timesOnline: {}, // empty the times
+    },
+  });
+
+  res.status(200).json({ message: "Deleted login times successfully!" });
 });
 
 module.exports = router;
