@@ -33,6 +33,31 @@ const Login = () => {
 
       if (response.ok) {
         setUser(data); // Set the user in context with id and username
+
+        const maxAge = 1000 * 60 * 5;
+        const warningTime = maxAge - 1000 * 30; // 30 seconds before expiration
+
+        // set timeout to execute backend route
+        setTimeout(() => {
+          fetch(`http://localhost:3000/before-expired`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            credentials: "include",
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .catch((error) => {
+              console.error("Error updating login-logout times: ", error);
+            });
+        }, warningTime);
+
         navigate("/news"); // Redirect to the homepage
       } else {
         setMessage({ type: "error", text: data.error });

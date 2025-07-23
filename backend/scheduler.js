@@ -14,53 +14,48 @@ const Signals = {
   VOTED: "timeVoted",
 };
 
-const findOnlineTimes = async () => {
-  // intervals based on login logout times
-  const users = await prisma.user.findMany(); // all users
+const addToWindows = async (loginTime, logoutTime) => {
+  // called immediately after logging out
+  let beginTime = new Date(loginTime); // update to get to logout time
+  const endTime = new Date(logoutTime);
 
-  const loginLogoutTimes = {}; // number of intervals (login-logout combos) within an 30 min window (for consistency)
-  for (const user in users) {
-    let timesLogin = JSON.parse(users[user].timesOnline);
-    let timesLogout = JSON.parse(users[user].logOutTimes);
-    if (timesLogin === null) {
-      continue; // not applicable
+  const totalTime = (endTime.getTime() - beginTime.getTime()) / 60000; // number of minutes in between
+  let numOfIntervals = Math.ceil(totalTime / 30); // 30-minute intervals
+
+  while (numOfIntervals != 0) {
+    // still intervals left
+    const interval = parseTime(
+      // starting interval
+      new Date(beginTime).getDay(),
+      new Date(beginTime).getHours(),
+      new Date(beginTime).getMinutes()
+    );
+
+    const time = await prisma.onlineTime.findFirst({
+      where: { interval: interval },
+    });
+
+    if (time) {
+      // interval exists
+      const updatedInterval = await prisma.onlineTime.update({
+        where: { id: time.id },
+        data: {
+          count: time.count + 1,
+        },
+      });
+    } else {
+      const newInterval = await prisma.onlineTime.create({
+        data: {
+          interval: interval,
+          count: 1, // first instance
+        },
+      });
     }
-    timesLogin = timesLogin["time"];
-    timesLogout = timesLogout["time"]; // parallel array?
-    let index = 0; // index of timesLogout
-    for (const time of timesLogin) {
-      // for a specific user
-      const window = parseTime(
-        new Date(time).getDay(),
-        new Date(time).getHours(),
-        new Date(time).getMinutes()
-      );
-      if (loginLogoutTimes[window]) {
-        // that time exists
-        loginLogoutTimes[window]++;
-      } else {
-        // time has not been seen yet
-        loginLogoutTimes[window] = 1; // first instance
-      }
 
-      // useful?
-      const logoutTime = timesLogout[index];
-      if (time < logoutTime) {
-        const logOutWindow = parseTime(
-          new Date(logoutTime).getDay(),
-          new Date(logoutTime).getHours(),
-          new Date(logoutTime).getMinutes()
-        );
-
-        if (logOutWindow === window) {
-          // same interval
-          index++;
-        }
-      }
-    }
+    const newTime = beginTime.getTime() + 30 * 60000;
+    beginTime = new Date(newTime);
+    numOfIntervals--;
   }
-
-  return loginLogoutTimes;
 };
 
 // aggregate engagement per interval of the articles interacted with
@@ -207,15 +202,19 @@ const groupByCategory = (dateIntervals) => {
 
 const findWeightedScores = async (topEngagementScores) => {
   // weighted by similarity to popular user times
-  const loginTimes = await findOnlineTimes();
+  const onlineTimes = await prisma.onlineTime.findMany();
 
   let finalizedTimes = {};
 
   for (const [interval, score] of topEngagementScores) {
     let weight = 0;
-    for (const time in loginTimes) {
-      const sim = similiarityAnalysis(time, interval, 0.01);
-      weight += sim * loginTimes[time]; // where loginTimes[time] is the frequency of the time interval
+    for (const time in onlineTimes) {
+      const sim = similiarityAnalysis(
+        onlineTimes[time].interval,
+        interval,
+        0.01
+      );
+      weight += sim * onlineTimes[time].count; // where onlineTImes[time] is the frequency of the time interval
     }
 
     finalizedTimes[interval] = (parseFloat(score) * weight).toFixed(2); // weighted score
@@ -255,6 +254,7 @@ const similiarityAnalysis = (time1, time2, decay = 0.01) => {
 
 module.exports = {
   groupByCategory,
+  addToWindows,
   groupByDate,
   getCategoryEngagement,
   findWeightedScores,

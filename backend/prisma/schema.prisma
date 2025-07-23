@@ -24,6 +24,12 @@ model User {
   logOutTimes Json? // times a user logs out (to get a window)
 }
 
+model OnlineTime { // to hold the login-logout windows
+  id       Int    @id @default(autoincrement())
+  interval String
+  count Int
+}
+
 model UserInteraction {
   id       Int    @id @default(autoincrement())
   openCount Int
