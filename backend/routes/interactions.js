@@ -49,6 +49,12 @@ router.post("/:newsId/:signal", async (req, res) => {
       },
     });
 
+    const interactionTimes = await prisma.interactionTime.findFirst({
+      where: {
+        newsId: newsid,
+      },
+    });
+
     if (opened) {
       // for the time stamp on userNewsCache
       const article = await prisma.userNewsCache.findFirst({
@@ -59,6 +65,43 @@ router.post("/:newsId/:signal", async (req, res) => {
         where: { id: article.id },
         data: {
           timeOpened: new Date(), // right now (most recent open)
+        },
+      });
+    }
+    if (interactionTimes) {
+      // this exists
+
+      let timesOpen = opened
+        ? interactionTimes.timeOpened.push(new Date())
+        : interactionTimes.timeOpened;
+      timesOpen = interactionTimes.timeOpened;
+
+      let timesRead = read
+        ? interactionTimes.timeRead.push(new Date())
+        : interactionTimes.timeRead;
+      timesRead = interactionTimes.timeRead;
+
+      const updatedTimes = await prisma.interactionTime.update({
+        where: {
+          id: interactionTimes.id,
+        },
+        data: {
+          timeOpened: timesOpen,
+          timeRead: timesRead,
+          timeBookmarked: liked
+            ? [new Date()]
+            : interactionTimes.timeBookmarked,
+        },
+      });
+    } else {
+      const addTimes = await prisma.interactionTime.create({
+        data: {
+          news: { connect: { id: newsid } }, // news id
+          timeOpened: opened ? [new Date()] : [],
+          timeRead: read ? [new Date()] : [],
+          timeBookmarked: liked ? [new Date()] : [],
+          timeAnnotated: [], // not tested here
+          timeVoted: [], // not tested here
         },
       });
     }
@@ -126,6 +169,7 @@ router.post("/:newsId/:signal", async (req, res) => {
           likedCount: liked ? 1 : 0,
           publishedDayOfWeek: article.releasedAt.getDay(),
           publishedTime: article.releasedAt.getHours(),
+          publishDate: article.releasedAt,
           score: 0.0, // default-- will add score later
         },
       });

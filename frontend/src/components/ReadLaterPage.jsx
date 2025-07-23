@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import NewsList from "./NewsList";
+import LoadingGif from "../assets/loading.gif";
 
 const ReadLaterPage = () => {
   const [newsData, setNewsData] = useState(null);
+  const [isLoading, setLoading] = useState(null);
 
   useEffect(() => {
     fetchBookmarkedNews();
   }, []);
 
   const fetchBookmarkedNews = async () => {
+    setLoading(true);
     fetch(`http://localhost:3000/user-news/`, {
       credentials: "include",
     })
@@ -19,9 +22,11 @@ const ReadLaterPage = () => {
         return response.json(); // Parse JSON data from the response
       })
       .then((data) => {
+        setLoading(false);
         setNewsData(parseForBookmarked(data));
       })
       .catch((error) => {
+        setLoading(false);
         console.error("Error fetching news:", error);
       });
   };
@@ -39,6 +44,11 @@ const ReadLaterPage = () => {
   return (
     <div className="bookmarkedPage">
       {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} />}
+      <div className="loading-state">
+        {isLoading && (
+          <img className="loading" src={LoadingGif} alt="Loading . . ." />
+        )}
+      </div>
     </div>
   );
 };

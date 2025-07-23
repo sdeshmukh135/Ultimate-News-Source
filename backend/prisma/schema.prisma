@@ -21,6 +21,7 @@ model User {
   userNews UserNewsCache[]
   weights EngagementWeight[]
   timesOnline Json? // times a user is online
+  logOutTimes Json? // times a user logs out (to get a window)
 }
 
 model UserInteraction {
@@ -49,6 +50,17 @@ model UserNewsCache {
   timeOpened DateTime? // time user opened the article
 }
 
+model InteractionTime {
+  id       Int    @id @default(autoincrement())
+  timeOpened DateTime[]
+  timeVoted DateTime[]
+  timeRead DateTime[]
+  timeBookmarked DateTime[]
+  timeAnnotated DateTime[]
+  newsId Int
+  news News? @relation(fields : [newsId], references : [id]) 
+}
+
 model Stock {
   id       Int    @id @default(autoincrement())
   date String
@@ -73,6 +85,7 @@ model News {
  interactions UserInteraction[]
  userNewsCache UserNewsCache[]
  globalInteractions GlobalInteraction[]
+ interactionTimes InteractionTime[]
 }
 
 model GlobalInteraction { // aggregated engagement signals per news across users
@@ -82,6 +95,7 @@ model GlobalInteraction { // aggregated engagement signals per news across users
   likedCount Int
   publishedDayOfWeek Int
   publishedTime Int // just the hour for now
+  publishDate DateTime?
   newsId Int
   score Float // engagement score
   news News @relation(fields : [newsId], references : [id]) 

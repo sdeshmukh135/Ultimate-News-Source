@@ -2,7 +2,7 @@ import "../styles/modal.css";
 import { useState } from "react";
 import LoadingGif from "../assets/loading.gif";
 import { CATEGORIES } from "../utils/utils.js";
-import Calender from 'react-calendar'
+import Calender from "react-calendar";
 
 const PostArticleModal = ({ setOpenPostModal }) => {
   const [post, setPost] = useState({
@@ -20,15 +20,28 @@ const PostArticleModal = ({ setOpenPostModal }) => {
 
   const parseOption = (time) => {
     // turn into the right format
-    const dayOfWeek = parseInt(time.slice(0, 1)); // first digit
-    const hour = parseInt(time.slice(2, 5)); // hour to post it during the day
 
-    let timeOption = getDay(dayOfWeek);
-    if (hour > 12) {
+    let [day, startTime, endTime] = time.split("-");
+
+    startTime = parseFloat(startTime);
+
+    let timeOption = getDay(day);
+    if (startTime > 12) {
       // in the afternoon
-      timeOption = timeOption + " " + (hour - 12) + "pm";
+      if ((startTime - 12) % 1 !== 0) {
+        // has a .5
+        timeOption =
+          timeOption + " " + Math.trunc(startTime - 12) + ":30" + "pm";
+      } else {
+        timeOption = timeOption + " " + (startTime - 12) + "pm";
+      }
     } else {
-      timeOption = timeOption + " " + hour + "am";
+      if (startTime % 1 !== 0) {
+        // has a .5
+        timeOption = timeOption + " " + Math.trunc(startTime) + ":30" + "pm";
+      } else {
+        timeOption = timeOption + " " + startTime + "am";
+      }
     }
 
     return timeOption;
@@ -69,7 +82,6 @@ const PostArticleModal = ({ setOpenPostModal }) => {
         imageURL: post.imageURL,
         categories: post.categories,
         timeToSchedule: post.timeToSchedule,
-        
       }),
     })
       .then((response) => {
@@ -109,7 +121,7 @@ const PostArticleModal = ({ setOpenPostModal }) => {
       credentials: "include",
       body: JSON.stringify({
         categories: post.categories,
-        deadline : deadline,
+        deadline: deadline,
       }),
     })
       .then((response) => {
@@ -119,8 +131,7 @@ const PostArticleModal = ({ setOpenPostModal }) => {
         return response.json();
       })
       .then((data) => {
-        const options = data.map((option) => option[0]); // the first index is the date
-        setTimeOptions(options);
+        setTimeOptions(data);
         setLoading(false); // no longer loading
       })
       .catch((error) => {
@@ -195,7 +206,7 @@ const PostArticleModal = ({ setOpenPostModal }) => {
           </select>
 
           <label htmlFor="deadline">Select a Deadline:</label>
-          <Calender onChange={setDeadline} value={deadline} required/>
+          <Calender onChange={setDeadline} value={deadline} required />
           <button
             type="button"
             id="handleScheduling"

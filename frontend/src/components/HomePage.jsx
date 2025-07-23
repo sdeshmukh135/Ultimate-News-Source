@@ -36,6 +36,7 @@ const HomePage = () => {
         setLoading(false);
       })
       .catch((error) => {
+        setLoading(false);
         console.error("Error fetching news:", error);
       });
   };
