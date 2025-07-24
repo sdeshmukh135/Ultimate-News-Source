@@ -19,8 +19,8 @@ const stockRoutes = require("./routes/stock");
 const featureRoutes = require("./routes/feature");
 const cacheRoutes = require("./routes/userNews");
 const interactionRoutes = require("./routes/interactions");
-const globalRoutes = require("./routes/globalInteractions")
-const weightRoutes = require("./routes/weights")
+const globalRoutes = require("./routes/globalInteractions");
+const weightRoutes = require("./routes/weights");
 const interactionTimeRoutes = require("./routes/interactionTimes");
 
 app.use(express.json());
@@ -29,7 +29,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-  }),
+  })
 );
 
 let sessionConfig = {
@@ -77,7 +77,7 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
     for (let i = 0; i < MAX_REQUESTS_PER_API_LIMIT; i++) {
       // in order to get 210 total articles at once (3 articles per request)
       const response = await fetch(
-        ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`,
+        ` https://api.thenewsapi.com/v1/news/top?locale=us&api_token=${apiToken}&language=en&page=${pageCount}`
       );
       const data = await response.json();
       const articles = data.data;

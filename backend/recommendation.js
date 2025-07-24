@@ -1,6 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const getClient = require("./redis.js"); // import Redis Client
+
+const CACHE_KEY = 'news:cached';
+
 const { Node, PriorityQueue } = require("./PriorityQueue");
 
 const expoDecayFactor = (releaseDate, lambda = 0.05) => {
@@ -58,14 +62,17 @@ const getRankings = async (
       }
     }
 
-    if (dateScores.hasOwnProperty(article.releasedAt.toDateString())) {
+    if (dateScores.hasOwnProperty((new Date(article.releasedAt)).toDateString())) {
       score +=
-        dateScores[article.releasedAt.toDateString()] *
-        expoDecayFactor(article.releasedAt);
+        dateScores[new Date(article.releasedAt).toDateString()] *
+        expoDecayFactor(new Date(article.releasedAt));
     } else {
-      score += 0.5 * expoDecayFactor(article.releasedAt); // explorary weight to give articles that do not have a match but are more recent still some weightage
+      score += 0.5 * expoDecayFactor(new Date(article.releasedAt)); // explorary weight to give articles that do not have a match but are more recent still some weightage
     }
 
+    if (!(new URL(article.articleURL))) {
+      continue; // invalid
+    }
     const URLString = new URL(article.articleURL).hostname;
     if (sourceScores.hasOwnProperty(URLString)) {
       score += sourceScores[URLString];
@@ -201,8 +208,35 @@ const calculateEngagement = async (req) => {
   }
 };
 
+const getCachedNews = async () => {
+  try {
+    const redis = await getClient();
+    const cachedNews = await redis.get(CACHE_KEY);
+
+    if (cachedNews) { // news exists within the cache (cache HIT)
+      return JSON.parse(cachedNews); // return the news we are looking for
+    }
+
+    const totalNum = await prisma.news.count();
+
+    const originalNews = await prisma.news.findMany({
+      orderBy : {releasedAt : 'desc'},
+      take : totalNum * 0.3 // want 30% of the database of the most recent news
+    })
+
+    await redis.set(CACHE_KEY, JSON.stringify(originalNews), {
+      EX: 3600 // TTL (Time To Live) is 1 hour
+    })
+
+    return originalNews; // CACHE MISS so we fetched from database
+  } catch (error) {
+    console.error("Failed to fetch from cache");
+  }
+}
+
 module.exports = {
   getUserNews,
+  getCachedNews,
   getRankings,
   createPersonalizedNews,
   calculateEngagement,

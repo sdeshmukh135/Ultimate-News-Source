@@ -31,3 +31,8 @@ export const TOOLS = {
   HIGHLIGHT : "highlight",
   DELETE : "delete"
 }
+
+// session-based enums
+export const SESSION = {
+  MAX_AGE: 1000 * 60 * 5,
+}
