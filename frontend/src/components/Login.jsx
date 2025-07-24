@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useUser } from "../contexts/UserContext";
+import { SESSION } from "../utils/utils.js"
 import AuthForm from "./AuthForm.jsx";
 
 const Login = () => {
@@ -34,8 +35,7 @@ const Login = () => {
       if (response.ok) {
         setUser(data); // Set the user in context with id and username
 
-        const maxAge = 1000 * 60 * 5;
-        const warningTime = maxAge - 1000 * 30; // 30 seconds before expiration
+        const warningTime = SESSION.MAX_AGE - (1000 * 30); // 30 seconds before expiration
 
         // set timeout to execute backend route
         setTimeout(() => {

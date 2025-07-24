@@ -4,7 +4,8 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const { getUserNews } = require("../recommendation");
+const { getUserNews, getCachedNews } = require("../recommendation");
+
 const {
   groupByDate,
   groupByCategory,
@@ -17,7 +18,7 @@ const {
 const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
 const schedule = require("node-schedule");
 
-const MAX_REQUESTS_PER_API_LIMIT = 30;
+const MAX_REQUESTS_PER_API_LIMIT = 10;
 
 const WEIGHTS = {
   READ: 3,
@@ -451,5 +452,18 @@ router.delete("/delete-dup", async (req, res) => {
 
   res.status(201).json({ message: "Duplicates Deleted Successfully!" });
 });
+
+
+router.post("/add-cache-news", async (req, res) => {
+  const allNews = await getCachedNews();
+
+  await prisma.news.createMany({
+    data : allNews
+  })
+
+  const news = await prisma.news.findMany();
+
+  res.status(200).json(news);
+})
 
 module.exports = router;

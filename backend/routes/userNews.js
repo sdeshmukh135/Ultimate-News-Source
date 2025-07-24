@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 const {
   getUserNews,
   getRankings,
+  getCachedNews,
   createPersonalizedNews,
   calculateEngagement,
 } = require("../recommendation");
@@ -284,7 +285,7 @@ router.post("/personalized", async (req, res) => {
     }
 
     // use the weights to give all news a score
-    const allNews = await prisma.news.findMany();
+    const allNews = await getCachedNews(); // cached news (instead of using the entire news database)
     const usedNews = newNews.map((article) => article.newsId);
     const notUsedNews = allNews.filter(
       (article) => !usedNews.includes(article.id)
