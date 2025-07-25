@@ -13,7 +13,9 @@ test("fetches existing news for a specific user", async () => {
   const article = await prisma.userNewsCache.findFirst({
     where: { userId: userId },
   });
-  expect(article).toBeDefined(); // most recent addition to news database
+  expect(article.name).toEqual(
+    "And Just Like That Recap: Lisa Confesses to Sex Dream About Coworker"
+  ); // most recent addition to userNewsCache
 });
 
 test("add a news article to the database", async () => {
