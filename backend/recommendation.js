@@ -16,6 +16,15 @@ const expoDecayFactor = (releaseDate, lambda = 0.05) => {
   return Math.exp(-lambda * delta);
 };
 
+const isValidURL = (url) => {
+  try {
+    const newURL = new URL(url);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 const getUserNews = async (req) => {
   const newNews = await prisma.userNewsCache.findMany({
     where: { userId: req.session.userId },
@@ -44,7 +53,7 @@ const getUserNews = async (req) => {
   return personalNews;
 };
 
-const getRankings = async (
+const getRankings = (
   dateScores,
   categoryScores,
   sourceScores,
@@ -70,7 +79,7 @@ const getRankings = async (
       score += 0.5 * expoDecayFactor(new Date(article.releasedAt)); // explorary weight to give articles that do not have a match but are more recent still some weightage
     }
 
-    if (!(new URL(article.articleURL))) {
+    if (!isValidURL(article.articleURL)) { // is not a valid URL
       continue; // invalid
     }
     const URLString = new URL(article.articleURL).hostname;
@@ -238,6 +247,7 @@ module.exports = {
   getUserNews,
   getCachedNews,
   getRankings,
+  expoDecayFactor,
   createPersonalizedNews,
   calculateEngagement,
 };
