@@ -291,7 +291,7 @@ router.post("/personalized", async (req, res) => {
       (article) => !usedNews.includes(article.id)
     ); // so that we are not looking at articles that have already been seen
 
-    let rankings = await getRankings(
+    let rankings = getRankings(
       weightedDateScores,
       weightedCategoryScores,
       weightedSourcesScores,

@@ -1,12 +1,12 @@
 // Priority Queue Implementation (Max Heap specifically)
-export class Node {
+class Node {
   constructor(id, value) {
     this.id = id; // e.g. newsId
     this.value = value; // e.g. ranking
   }
 }
 
-export class PriorityQueue {
+class PriorityQueue {
   constructor() {
     this.heap = []; // heap implemention
   }
@@ -114,3 +114,5 @@ export class PriorityQueue {
     return this.heap;
   };
 }
+
+module.exports = { Node, PriorityQueue };
