@@ -39,7 +39,7 @@ const PersonalizationModal = ({ setNewsData, setPersonalModal }) => {
       .catch((error) => {
         setLoading(false);
         setPersonalModal(false);
-        console.error("Error fetching times: ", error);
+        console.error("Error fetching Personalized News: ", error);
       });
   };
 
