@@ -12,7 +12,7 @@ const ReadLaterPage = () => {
 
   const fetchBookmarkedNews = async () => {
     setLoading(true);
-    fetch(`http://localhost:3000/user-news/`, {
+    fetch(`http://localhost:3000/user-news/bookmarked`, {
       credentials: "include",
     })
       .then((response) => {
@@ -23,22 +23,12 @@ const ReadLaterPage = () => {
       })
       .then((data) => {
         setLoading(false);
-        setNewsData(parseForBookmarked(data));
+        setNewsData(data);
       })
       .catch((error) => {
         setLoading(false);
         console.error("Error fetching news:", error);
       });
-  };
-
-  const parseForBookmarked = (news) => {
-    const bookMarkedNews = [];
-    for (const article of news) {
-      if (article.bookmarked) {
-        bookMarkedNews.push(article);
-      }
-    }
-    return bookMarkedNews;
   };
 
   return (

@@ -135,6 +135,7 @@ const PostArticleModal = ({ setOpenPostModal }) => {
         setLoading(false); // no longer loading
       })
       .catch((error) => {
+        setLoading(false);
         console.error("Error fetching times: ", error);
       });
   };

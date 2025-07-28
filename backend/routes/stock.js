@@ -28,7 +28,7 @@ router.get("/add-stocks", async (req, res) => {
   // before deleting, check to make sure that we really do need new data (don't want to unncessarily call the API)
   let currentDay = new Date();
   currentDay.setHours(
-    currentDay.getHours() - currentDay.getTimezoneOffset() / 60,
+    currentDay.getHours() - currentDay.getTimezoneOffset() / 60
   ); // to account for timezones (must match UTC)
   currentDay = currentDay.toISOString().slice(0, 10);
   const oldStocks = await prisma.stock.findMany({
@@ -47,10 +47,11 @@ router.get("/add-stocks", async (req, res) => {
   for (const stock of Object.values(stockTypes)) {
     try {
       const response = await fetch(
-        `https://api.twelvedata.com/time_series?symbol=${stock}&interval=1day&time=UTC&apikey=${apiKey}&source=docs`,
+        `https://api.twelvedata.com/time_series?symbol=${stock}&interval=1day&time=UTC&apikey=${apiKey}&source=docs`
       );
       const data = await response.json();
       // process the response
+
       const low = data["values"][0].low;
       const difference =
         ((parseFloat(data["values"][0].close) -
@@ -98,6 +99,7 @@ router.get("/add-stocks", async (req, res) => {
   // add to prisma
   const newStocks = await prisma.stock.createMany({
     data: stockArr,
+    skipDuplicates: true,
   });
 
   const stocks = await prisma.stock.findMany({

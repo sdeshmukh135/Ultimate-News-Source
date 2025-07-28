@@ -251,6 +251,23 @@ router.put("/:newsId/update-tag", async (req, res) => {
   res.status(200).json(personalNews);
 });
 
+// get fact-checked information (TRUE or FALSE) --> TO-DO structure in the frontend
+router.get("/fact-checked", async (req, res) => {
+  const { claim } = req.body; // what the author is claiming to be true
+
+  const API_KEY = process.env.FACT_API_KEY;
+
+  try {
+    const response = await fetch(
+      `https://factchecktools.googleapis.com/v1alpha1/claims:search?query=${claim}&key=${API_KEY}`
+    );
+    const data = await response.json();
+    res.status(200).json(data); // whatever the output is from the dataset
+  } catch (error) {
+    res.status(500).json({ error: "Unable to fetch fact-checked claims" });
+  }
+});
+
 // for testing purposes
 router.post("/add-news", async (req, res) => {
   // add a news to the news database
@@ -452,18 +469,5 @@ router.delete("/delete-dup", async (req, res) => {
 
   res.status(201).json({ message: "Duplicates Deleted Successfully!" });
 });
-
-
-router.post("/add-cache-news", async (req, res) => {
-  const allNews = await getCachedNews();
-
-  await prisma.news.createMany({
-    data : allNews
-  })
-
-  const news = await prisma.news.findMany();
-
-  res.status(200).json(news);
-})
 
 module.exports = router;

@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import Banner from "../components/Banner.jsx";
 import NewsList from "./NewsList";
 import LoadingGif from "../assets/loading.gif";
+import PersonalizationModal from "./PersonalizationModal.jsx";
 
 const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
+  const [personalModal, setPersonalModal] = useState(false); // whether or not we need the modal for initial personalization
   const [isLoading, setLoading] = useState(null);
   const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
   const fetchNewsURL = `http://localhost:3000/user-news`; // default URL for general news (but user-specific)
@@ -32,7 +34,12 @@ const HomePage = () => {
         return response.json(); // Parse JSON data from the response
       })
       .then((data) => {
-        setNewsData(data);
+        if (data.length === 0) {
+          // there is no news in the cache for this specific user (i.e. new user)
+          setPersonalModal(true);
+        } else {
+          setNewsData(data);
+        }
         setLoading(false);
       })
       .catch((error) => {
@@ -53,6 +60,12 @@ const HomePage = () => {
         setNewsData={setNewsData}
         setLoading={setLoading}
       />
+      {personalModal && (
+        <PersonalizationModal
+          setNewsData={setNewsData}
+          setPersonalModal={setPersonalModal}
+        />
+      )}
       {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} />}
       <div className="loading-state">
         {isLoading && (

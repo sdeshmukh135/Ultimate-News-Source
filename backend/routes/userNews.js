@@ -13,31 +13,7 @@ const {
   calculateEngagement,
 } = require("../recommendation");
 
-// enums
-const Categories = {
-  GENERAL: "general",
-  SCIENCE: "science",
-  SPORTS: "sports",
-  BUSINESS: "business",
-  HEALTH: "health",
-  ENTERTAINMENT: "entertainment",
-  TECH: "tech",
-  POLITICS: "politics",
-  FOOD: "food",
-  TRAVEL: "travel",
-};
-
-const RecentFilters = {
-  TODAY: "today",
-  LAST_WEEK: "last week",
-  LAST_YEAR: "last year",
-  GENERAL: "general",
-};
-
-const SentimentFilters = {
-  POSITIVE: "POSITIVE",
-  NEGATIVE: "NEGATIVE",
-};
+const { Categories, RecentFilters, SentimentFilters } = require("../filters"); // stores all enums
 
 const getSimiliarity = (userCategories, articleCategories) => {
   let intersection = new Set(
@@ -117,10 +93,8 @@ router.get("/filter-news/:type", async (req, res) => {
   }
 });
 
-// add news to cache (testing purposes, otherwise news is updated using engagement scores)
+// add news to cache (for new user that do not have a personalized feed yet)
 router.post("/add-news", async (req, res) => {
-  // edit to take in user input to personalize according to hardcoded information.
-
   const { categories, sources } = req.body;
   try {
     const someNews = await prisma.news.findMany({
@@ -154,11 +128,8 @@ router.post("/add-news", async (req, res) => {
       });
     }
 
-    const personalNews = await prisma.userNewsCache.findMany({
-      where: { userId: req.session.userId },
-    });
-
-    res.status(201).json(personalNews);
+    const personalNews = await getUserNews(req); // to give to user input
+    res.status(200).json(personalNews);
   } catch (error) {
     res.status(500).json({ error: "Error in adding news to cache" });
   }
