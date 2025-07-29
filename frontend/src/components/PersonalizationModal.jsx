@@ -2,7 +2,7 @@ import "../styles/modal.css";
 import { useState } from "react";
 import { CATEGORIES } from "../utils/utils.js";
 
-const PersonalizationModal = ({ setNewsData, setPersonalModal }) => {
+const PersonalizationModal = ({ setNewsData, setPersonalModalVisible }) => {
   const [personal, setPersonal] = useState({
     categories: [], // set kind of categories to choose from
     sources: [], // user can input whatever sources they would like
@@ -38,7 +38,7 @@ const PersonalizationModal = ({ setNewsData, setPersonalModal }) => {
       })
       .catch((error) => {
         setLoading(false);
-        setPersonalModal(false);
+        setPersonalModalVisible(false);
         console.error("Error fetching Personalized News: ", error);
       });
   };

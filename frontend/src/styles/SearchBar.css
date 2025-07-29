@@ -1,0 +1,22 @@
+.Searchbar {
+    display:flex;
+    background-color:#ababab;
+    border:2px solid black;
+    border-radius:0%;
+}
+
+.searchInput {
+    margin:10px;
+    width:80%auto;
+    height:40px;
+}
+
+.type-search {
+    padding:5px;
+    color:white;
+    border:1px solid black;
+}
+
+#submitChange {
+    margin:5px;
+}

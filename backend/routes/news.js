@@ -4,7 +4,7 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const { getUserNews, getCachedNews } = require("../recommendation");
+const { getUserNews } = require("../recommendation");
 
 const {
   groupByDate,
@@ -251,19 +251,35 @@ router.put("/:newsId/update-tag", async (req, res) => {
   res.status(200).json(personalNews);
 });
 
-// get fact-checked information (TRUE or FALSE) --> TO-DO structure in the frontend
-router.get("/fact-checked", async (req, res) => {
+// get fact-checked information (TRUE or FALSE)
+router.post("/fact-checked", async (req, res) => {
   const { claim } = req.body; // what the author is claiming to be true
 
   const API_KEY = process.env.FACT_API_KEY;
+
+  const evidenceArticles = [];
 
   try {
     const response = await fetch(
       `https://factchecktools.googleapis.com/v1alpha1/claims:search?query=${claim}&key=${API_KEY}`
     );
     const data = await response.json();
-    res.status(200).json(data); // whatever the output is from the dataset
+
+    for (const article of data["claims"]) {
+      const evidence = {
+        claim : article.text,
+        source : article["claimReview"][0].publisher.site,
+        review : article["claimReview"][0].textualRating,
+        reviewDate : article["claimReview"][0].reviewDate,
+        articleURL : article["claimReview"][0].url
+      }
+
+      evidenceArticles.push(evidence);
+    }
+
+    res.status(200).json(evidenceArticles); // whatever the output is from the dataset
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Unable to fetch fact-checked claims" });
   }
 });

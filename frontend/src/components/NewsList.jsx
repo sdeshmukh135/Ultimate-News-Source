@@ -1,9 +1,10 @@
 import NewsComponent from "./NewsComponent";
 import ArticleModal from "./ArticleModal";
+import FactComponent from './FactComponent'
 import { useState } from "react";
 import "../styles/News.css";
 
-const NewsList = ({ newsData, setNewsData }) => {
+const NewsList = ({ newsData, setNewsData, fromFact }) => {
   const [articleModalData, setArticleModalData] = useState(""); // for the article data (just the article link for now)
 
   const handleSignalUpdates = (id, signal, liked) => {
@@ -39,16 +40,25 @@ const NewsList = ({ newsData, setNewsData }) => {
           handleSignalUpdates={handleSignalUpdates}
         />
       )}
-      {newsData.map((article) => {
-        return (
-          <NewsComponent
-            article={article}
-            setNewsData={setNewsData}
-            setArticleModalData={setArticleModalData}
-            handleSignalUpdates={handleSignalUpdates}
-          />
-        );
-      })}
+      {!fromFact &&
+        newsData.map((article) => {
+          return (
+            <NewsComponent
+              article={article}
+              setNewsData={setNewsData}
+              setArticleModalData={setArticleModalData}
+              handleSignalUpdates={handleSignalUpdates}
+            />
+          );
+        })}
+
+      {fromFact &&
+        newsData.map((article) => {
+          return (
+            // not the same as the news component (does not have all of the signal functionality)
+            <FactComponent article={article} />
+          );
+        })}
     </div>
   );
 };

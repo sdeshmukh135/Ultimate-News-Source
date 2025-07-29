@@ -3,12 +3,16 @@ import Banner from "../components/Banner.jsx";
 import NewsList from "./NewsList";
 import LoadingGif from "../assets/loading.gif";
 import PersonalizationModal from "./PersonalizationModal.jsx";
+import SearchBar from "./SearchBar.jsx";
 
 const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
-  const [personalModal, setPersonalModal] = useState(false); // whether or not we need the modal for initial personalization
+  const [originalData, setOriginalData] = useState(null);
+  const [personalModalVisible, setPersonalModalVisible] = useState(false); // whether or not we need the modal for initial personalization
   const [isLoading, setLoading] = useState(null);
+  const [fromFact, setFromFact] = useState(false); // test whether the newsData is from fact search query
   const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
+  
   const fetchNewsURL = `http://localhost:3000/user-news`; // default URL for general news (but user-specific)
 
   useEffect(() => {
@@ -36,9 +40,10 @@ const HomePage = () => {
       .then((data) => {
         if (data.length === 0) {
           // there is no news in the cache for this specific user (i.e. new user)
-          setPersonalModal(true);
+          setPersonalModalVisible(true);
         } else {
           setNewsData(data);
+          setOriginalData(data);
         }
         setLoading(false);
       })
@@ -60,13 +65,14 @@ const HomePage = () => {
         setNewsData={setNewsData}
         setLoading={setLoading}
       />
-      {personalModal && (
+      <SearchBar originalData={originalData} setNewsData={setNewsData} setFromFact={setFromFact}/>
+      {personalModalVisible && (
         <PersonalizationModal
           setNewsData={setNewsData}
-          setPersonalModal={setPersonalModal}
+          setPersonalModalVisible={setPersonalModalVisible}
         />
       )}
-      {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} />}
+      {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} fromFact={fromFact} />}
       <div className="loading-state">
         {isLoading && (
           <img className="loading" src={LoadingGif} alt="Loading . . ." />
