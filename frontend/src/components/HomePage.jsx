@@ -7,12 +7,13 @@ import SearchBar from "./SearchBar.jsx";
 
 const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
-  const [originalData, setOriginalData] = useState(null);
+  const [changedNewsData, setChangedNewsData] = useState(null); // to hold changes to using search
   const [personalModalVisible, setPersonalModalVisible] = useState(false); // whether or not we need the modal for initial personalization
   const [isLoading, setLoading] = useState(null);
-  const [fromFact, setFromFact] = useState(false); // test whether the newsData is from fact search query
   const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
-  
+
+  const fromFact = false;
+
   const fetchNewsURL = `http://localhost:3000/user-news`; // default URL for general news (but user-specific)
 
   useEffect(() => {
@@ -38,12 +39,11 @@ const HomePage = () => {
         return response.json(); // Parse JSON data from the response
       })
       .then((data) => {
-        if (data.length === 0) {
+        if (data.length === 0 && filterOption === "") {
           // there is no news in the cache for this specific user (i.e. new user)
           setPersonalModalVisible(true);
         } else {
           setNewsData(data);
-          setOriginalData(data);
         }
         setLoading(false);
       })
@@ -65,14 +65,24 @@ const HomePage = () => {
         setNewsData={setNewsData}
         setLoading={setLoading}
       />
-      <SearchBar originalData={originalData} setNewsData={setNewsData} setFromFact={setFromFact}/>
+      <SearchBar
+        setChangedNewsData={setChangedNewsData}
+        fromFact={fromFact}
+        setLoading={setLoading}
+      />
       {personalModalVisible && (
         <PersonalizationModal
           setNewsData={setNewsData}
           setPersonalModalVisible={setPersonalModalVisible}
         />
       )}
-      {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} fromFact={fromFact} />}
+      {newsData && (
+        <NewsList
+          newsData={changedNewsData || newsData}
+          setNewsData={changedNewsData ? setChangedNewsData : setNewsData}
+          fromFact={fromFact}
+        />
+      )}
       <div className="loading-state">
         {isLoading && (
           <img className="loading" src={LoadingGif} alt="Loading . . ." />

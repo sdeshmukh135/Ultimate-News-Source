@@ -13,7 +13,12 @@ const {
   calculateEngagement,
 } = require("../recommendation");
 
-const { Categories, RecentFilters, SentimentFilters } = require("../filters"); // stores all enums
+const {
+  Categories,
+  RecentFilters,
+  SentimentFilters,
+  RegionFilters,
+} = require("../filters"); // stores all enums
 
 const getSimiliarity = (userCategories, articleCategories) => {
   let intersection = new Set(
@@ -81,6 +86,10 @@ router.get("/filter-news/:type", async (req, res) => {
     } else if (Object.values(SentimentFilters).includes(chosenFilter)) {
       filteredNews = originalNews.filter(function (object) {
         return object.sentiment[0].label === chosenFilter;
+      });
+    } else if (Object.values(RegionFilters).includes(chosenFilter)) {
+      filteredNews = originalNews.filter(function (object) {
+        return object.region === chosenFilter;
       });
     } else {
       // last option "none" --> fetch original data

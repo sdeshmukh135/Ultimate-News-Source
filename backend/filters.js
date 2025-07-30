@@ -24,4 +24,12 @@ const SentimentFilters = {
   NEGATIVE: "NEGATIVE",
 };
 
-module.exports = { Categories, RecentFilters, SentimentFilters };
+const RegionFilters = {
+  // Four region model
+  NORTHEAST: "northeast",
+  MIDWEST: "midwest",
+  WEST: "west",
+  SOUTH: "south",
+};
+
+module.exports = { Categories, RecentFilters, SentimentFilters, RegionFilters};

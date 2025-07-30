@@ -34,7 +34,7 @@ const PersonalizationModal = ({ setNewsData, setPersonalModalVisible }) => {
       })
       .then((data) => {
         setNewsData(data); // new input for the specific user
-        setPersonalModal(false);
+        setPersonalModalVisible(false);
       })
       .catch((error) => {
         setLoading(false);

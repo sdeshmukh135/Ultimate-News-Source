@@ -88,6 +88,7 @@ model News {
  leftCount Int?
  rightCount Int?
  sentiment Json?
+ region String?
  interactions UserInteraction[]
  userNewsCache UserNewsCache[]
  globalInteractions GlobalInteraction[]
