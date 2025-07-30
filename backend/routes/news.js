@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 
 const { getUserNews } = require("../recommendation");
 
+const { RegionFilters } = require("../filters.js");
+
 const {
   groupByDate,
   groupByCategory,
@@ -267,12 +269,12 @@ router.post("/fact-checked", async (req, res) => {
 
     for (const article of data["claims"]) {
       const evidence = {
-        claim : article.text,
-        source : article["claimReview"][0].publisher.site,
-        review : article["claimReview"][0].textualRating,
-        reviewDate : article["claimReview"][0].reviewDate,
-        articleURL : article["claimReview"][0].url
-      }
+        claim: article.text,
+        source: article["claimReview"][0].publisher.site,
+        review: article["claimReview"][0].textualRating,
+        reviewDate: article["claimReview"][0].reviewDate,
+        articleURL: article["claimReview"][0].url,
+      };
 
       evidenceArticles.push(evidence);
     }
@@ -438,6 +440,70 @@ router.post("/find-times", async (req, res) => {
     res.status(200).json(chosenDates); // best time intervals to post article
   } catch (error) {
     res.status(500).json({ error: "something went wrong with finding times" });
+  }
+});
+
+// search for articles
+router.post("/search", async (req, res) => {
+  const { keywords } = req.body;
+
+  try {
+    const conditions = keywords.map((keyword) => ({
+      name: {
+        contains: keyword,
+        mode: "insensitive", // for case insensitivity
+      },
+    }));
+
+    const articles = await prisma.news.findMany({
+      // most recent 30 matches (if even that many exist for the keywords present)
+      where: {
+        OR: conditions,
+      },
+      orderBy: {
+        releasedAt: "desc",
+      },
+      take: 30,
+    });
+
+    res.status(200).json(articles);
+  } catch (error) {
+    res.status(500).json({ error: "Unable to find articles" });
+  }
+});
+
+router.put("/seed-regions", async (req, res) => {
+  // testing purposes (will be automatically added to future news)
+  // add mock regions to every news in the news database
+  const articles = await prisma.news.findMany({
+    // find all articles that do not have a region
+    where: {
+      region: null,
+    },
+  });
+  try {
+    const regions = Object.values(RegionFilters);
+    let randomIndex = 0;
+    let chosenRegion = "";
+
+    for (const article of articles) {
+      randomIndex = Math.floor(Math.random() * regions.length);
+      chosenRegion = regions[randomIndex];
+
+      const updatedArticle = await prisma.news.update({
+        where: { id: article.id },
+        data: {
+          region: chosenRegion,
+        },
+      });
+    }
+
+    const updatedArticles = await prisma.news.findMany();
+
+    res.status(200).json(updatedArticles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "unable to update the regions" });
   }
 });
 

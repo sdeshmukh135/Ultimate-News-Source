@@ -15,11 +15,16 @@ export const SubFilters = {
   TRAVEL: "travel",
   POSITIVE: "POSITIVE",
   NEGATIVE: "NEGATIVE",
+  NORTHEAST: "northeast",
+  MIDWEST: "midwest",
+  WEST: "west",
+  SOUTH: "south",
 };
 
 export const Filters = {
   NONE: "none",
   CATEGORY: "category",
   RECENT: "recent",
+  REGION: "region",
   SENTIMENT: "sentiment",
 };

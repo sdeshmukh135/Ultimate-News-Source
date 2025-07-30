@@ -5,6 +5,8 @@ const schedule = require("node-schedule");
 
 const { pipeline } = require("@huggingface/transformers"); // for sentiment analysis
 
+const { RegionFilters } = require("./filters.js");
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -86,6 +88,10 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
         const classifier = await pipeline("sentiment-analysis");
         const result = await classifier(article.title); // classifying based on article title
 
+        const regions = Object.values(RegionFilters);
+        randomIndex = Math.floor(Math.random() * regions.length);
+        chosenRegion = regions[randomIndex];
+
         const publishedDate = new Date(article.published_at);
         const newArticle = {
           name: article.title,
@@ -96,6 +102,7 @@ const addToDatabase = schedule.scheduleJob("0 0 * * *", async function () {
           leftCount: 0,
           rightCount: 0,
           sentiment: result,
+          region: chosenRegion,
         };
 
         newsData.push(newArticle);

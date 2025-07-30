@@ -1,14 +1,14 @@
 import { useState } from "react";
 import "../styles/SearchBar.css";
 
-const SearchBar = ({ originalData, setNewsData, setFromFact }) => {
+const SearchBar = ({setChangedNewsData, fromFact, setLoading }) => {
   const [query, setQuery] = useState("");
-  const [isFactCheck, setIsFactCheck] = useState(false); // to toggle between fact-checking and simply searching for specific articles
 
   const handleSearching = (event) => {
     event.preventDefault();
-    if (isFactCheck) {
-      fetch(`http://localhost:3000/news/fact-checked`, {
+    setLoading(true);
+    if (fromFact) {
+      fetch(`http://localhost:3000/news/fact-checked`, { // combine the two fetches?
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,50 +26,64 @@ const SearchBar = ({ originalData, setNewsData, setFromFact }) => {
           return response.json();
         })
         .then((data) => {
-          setNewsData(data); // NOT the same structure as the other news, must be handled separately
-          setFromFact(true); // once the information is accessed, will set this back to false
+            setLoading(false);
+          setChangedNewsData(data); // NOT the same structure as the other news, must be handled separately
         })
         .catch((error) => {
+            setLoading(false);
           console.error("Error fetching evidence:", error);
         });
     } else {
       // normal searching through the information presented on the screen
-      const filteredNews = [];
-
-      const newsData = originalData;
       const keyWords = query.split(" "); // split the query into keywords to look for
 
-      for (const article of newsData) {
-        if (
-          keyWords.some((word) =>
-            article.name.toLowerCase().includes(word.toLowerCase())
-          )
-        ) {
-          // accounts for case-insensitivity
-          // valid article
-          filteredNews.push(article);
-        }
-      }
-
-      setNewsData(filteredNews);
+      searchArticles(keyWords);
     }
+  };
+
+  const searchArticles = (keyWords) => {
+    setLoading(true);
+    fetch(`http://localhost:3000/news/search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        keywords: keyWords,
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setLoading(false);
+        setChangedNewsData(data); // top 30 articles that match the search query
+      })
+      .catch((error) => {
+        setLoading(false);
+        console.error("Error fetching search results: ", error);
+      });
   };
 
   const TypeOfSearch = () => {
     return (
       <div
         className="type-search"
-        onClick={() => setIsFactCheck(!isFactCheck)}
-        style={{ backgroundColor: isFactCheck ? "#9e0b0f" : "#000000" }}
+        style={{ backgroundColor: fromFact ? "#9e0b0f" : "#000000" }}
       >
-        {isFactCheck ? "Fact Check" : "Search Articles"}
+        {fromFact ? "Fact Check" : "Search Articles"}
       </div>
     );
   };
 
   const handleClear = () => {
-    setFromFact(false); // reset the information on the Home Page
-    setNewsData(originalData); // reset the news data to the original news data passed into this component
+    setQuery(""); // clear the search bar
+    setChangedNewsData(null); // no changed news anymore
   };
 
   return (

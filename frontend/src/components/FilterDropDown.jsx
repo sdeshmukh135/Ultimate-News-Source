@@ -7,6 +7,7 @@ const FilterDropDown = ({ setFilterOption }) => {
     isRecent: false,
     isCategory: false,
     isSentiment: false,
+    isRegion: false,
   }); // suboptions are closed as well (for the two categories with sub-options)
 
   const getFilter = (filterType) => {
@@ -34,6 +35,8 @@ const FilterDropDown = ({ setFilterOption }) => {
         ];
       case Filters.SENTIMENT:
         return [SubFilters.POSITIVE, SubFilters.NEGATIVE];
+      case Filters.REGION:
+        return [SubFilters.SOUTH, SubFilters.MIDWEST, SubFilters.WEST, SubFilters.NORTHEAST];
       case Filters.NONE:
     }
   };
@@ -62,6 +65,7 @@ const FilterDropDown = ({ setFilterOption }) => {
         isRecent: false,
         isCategory: false,
         isSentiment: false,
+        isRegion:false,
       })); // close this to
     }
     setOpenDropDown(!openDropDown);
@@ -82,6 +86,11 @@ const FilterDropDown = ({ setFilterOption }) => {
       setOpenSuboptions((prev) => ({
         ...prev,
         isSentiment: !openSubOptions.isSentiment,
+      }));
+    } else if (category === "region") {
+      setOpenSuboptions((prev) => ({
+        ...prev,
+        isRegion: !openSubOptions.isRegion,
       }));
     } else {
       // options without suboptions (clicking on it is all you need to do)
@@ -134,6 +143,7 @@ const FilterDropDown = ({ setFilterOption }) => {
       {openSubOptions.isSentiment
         ? SubFilterTypeButtons(Filters.SENTIMENT)
         : null}
+      {openSubOptions.isRegion ? SubFilterTypeButtons(Filters.REGION) : null}
     </div>
   );
 };
