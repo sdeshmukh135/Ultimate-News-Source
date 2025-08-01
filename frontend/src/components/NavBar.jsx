@@ -28,7 +28,7 @@ const NavBar = () => {
     <nav>
       <div className="pagelinks">
         <Link to="/news">
-          <header>Veritas</header>
+          <header>Home</header>
         </Link>
 
         <Link to="/featured">
@@ -43,6 +43,8 @@ const NavBar = () => {
           <header>Fact Check</header>
         </Link>
       </div>
+
+      <h1 className="title">Veritas</h1>
 
       <div className="auth-links">
         {user ? (

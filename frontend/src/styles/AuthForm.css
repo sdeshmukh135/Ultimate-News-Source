@@ -4,21 +4,22 @@ form {
   flex-direction: column;
   justify-content: center;
   gap: 10px;
-  margin: auto;
-  height: auto;
+  margin:auto;
+  width:auto;
+  height:auto;
   padding: 30px;
   max-width: auto;
-  border: 1px solid black;
+  background-color:#9e0b0f;
+  color:	#fff6eb;
+  border: 2px solid white;
   border-radius: 5%;
 }
 
 input {
-  background-color: #fafbfc;
+  background-color: white;
   border: 1px solid #1b1f2326;
   border-radius: 4px;
-  box-shadow:
-    0 1px 0 #1b1f230a,
-    inset 0 1px 0 #ffffff40;
+  box-shadow: 0 1px 0 #1b1f230a, inset 0 1px 0 #ffffff40;
   box-sizing: border-box;
   color: #24292e;
   flex: 1 1;

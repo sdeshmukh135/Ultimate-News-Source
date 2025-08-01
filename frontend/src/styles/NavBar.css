@@ -20,6 +20,12 @@ nav {
   align-items: center;
 }
 
+.title {
+  display: flex;
+  justify-content: center;
+  margin-right: 350px;
+}
+
 header {
   height: 70px;
   display: flex;
@@ -30,7 +36,7 @@ header {
 }
 
 .manufacturing-consent-regular {
-  font-family: "Manufacturing Consent", system-ui;
+  font-family: "Courier New", Courier, monospace;
   font-weight: 400;
   font-style: normal;
 }

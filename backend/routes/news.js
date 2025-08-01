@@ -4,7 +4,7 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const { getUserNews } = require("../recommendation");
+const { getUserNews, getCachedNews } = require("../recommendation");
 
 const { RegionFilters } = require("../filters.js");
 
@@ -505,6 +505,21 @@ router.put("/seed-regions", async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "unable to update the regions" });
   }
+});
+
+// fetch region-specific news
+router.get("/:region", async (req, res) => {
+  const region = req.params.region;
+
+  const cachedNews = await getCachedNews();
+
+  const filteredData = cachedNews
+    .filter(function (object) {
+      return object.region === region;
+    })
+    .slice(0, 30); // first 30 articles (otherwise too many to present?)
+
+  res.status(200).json(filteredData);
 });
 
 // to delete duplicate news (due to API problems)

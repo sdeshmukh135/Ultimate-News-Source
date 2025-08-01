@@ -1,15 +1,18 @@
 body {
   margin: 0;
-  font-family: "Courier New", Courier, monospace;
+  font-family: Georgia, "Times New Roman", Times, serif;
   background-color: #f4f4f4;
 }
 
 button {
-  background-color: #282c34;
-  color: white;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  background-color: #ababab;
+  color: black;
   cursor: pointer;
+  padding: 5px;
   font-size: 16px;
   font-weight: bold;
+  border: 2px solid white;
   transition: background-color 0.3s ease;
 }
 

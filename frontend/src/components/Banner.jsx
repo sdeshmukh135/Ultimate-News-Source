@@ -3,8 +3,15 @@ import "../styles/Banner.css";
 import { useState } from "react";
 import PlusSign from "/src/assets/plusSign.png";
 import PostArticleModal from "./PostArticleModal.jsx";
+import SearchBar from "./SearchBar.jsx";
 
-const Banner = ({ setFilterOption, setNewsData, setLoading }) => {
+const Banner = ({
+  setFilterOption,
+  setNewsData,
+  setLoading,
+  setChangedNewsData,
+  fromFact,
+}) => {
   // ONLY visible to those logged in
   const [openPostModal, setOpenPostModal] = useState(false);
 
@@ -42,17 +49,26 @@ const Banner = ({ setFilterOption, setNewsData, setLoading }) => {
 
   return (
     <div className="banner">
-      <h2>News for You</h2>
-      <button onClick={handleRefresh}>Refresh Feed</button>
-      <FilterDropDown setFilterOption={setFilterOption} />
-      <div className="plusToolTip">
-        <img
-          className="plus-sign"
-          src={PlusSign}
-          alt="plus sign"
-          onClick={openModal}
-        />
-        <span className="tooltip-text">Post an Article of Your Own!</span>
+      <div className="right-side">
+        <h2>News for You</h2>
+        <button onClick={handleRefresh}>Refresh Feed</button>
+      </div>
+      <SearchBar
+        setChangedNewsData={setChangedNewsData}
+        fromFact={fromFact}
+        setLoading={setLoading}
+      />
+      <div className="features">
+        <FilterDropDown setFilterOption={setFilterOption} />
+        <div className="plusToolTip">
+          <img
+            className="plus-sign"
+            src={PlusSign}
+            alt="plus sign"
+            onClick={openModal}
+          />
+          <span className="tooltip-text">Post an Article of Your Own!</span>
+        </div>
       </div>
       {openPostModal && (
         <PostArticleModal setOpenPostModal={setOpenPostModal} />
