@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Banner from "../components/Banner.jsx";
 import NewsList from "./NewsList";
 import LoadingGif from "../assets/loading.gif";
@@ -13,6 +14,7 @@ const HomePage = () => {
   const [filterOption, setFilterOption] = useState(""); // for the filter dropdown
 
   const fromFact = false;
+  const navigate = useNavigate();
 
   const fetchNewsURL = `http://localhost:3000/user-news`; // default URL for general news (but user-specific)
 
@@ -53,6 +55,10 @@ const HomePage = () => {
       });
   };
 
+  const toMap = () => {
+    navigate("/map");
+  };
+
   const filterData = () => {
     const filterURL = fetchNewsURL + `/filter-news/${filterOption}`;
     fetchNews(filterURL);
@@ -63,13 +69,13 @@ const HomePage = () => {
       <Banner
         setFilterOption={setFilterOption}
         setNewsData={setNewsData}
-        setLoading={setLoading}
-      />
-      <SearchBar
         setChangedNewsData={setChangedNewsData}
-        fromFact={fromFact}
         setLoading={setLoading}
+        fromFact={fromFact}
       />
+      <button className="button-to-map" onClick={toMap}>
+        View Articles on Map
+      </button>
       {personalModalVisible && (
         <PersonalizationModal
           setNewsData={setNewsData}

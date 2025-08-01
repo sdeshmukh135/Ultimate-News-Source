@@ -33,6 +33,7 @@ const ReadLaterPage = () => {
 
   return (
     <div className="bookmarkedPage">
+      <h1>Bookmarked News</h1>
       {newsData && <NewsList newsData={newsData} setNewsData={setNewsData} />}
       <div className="loading-state">
         {isLoading && (

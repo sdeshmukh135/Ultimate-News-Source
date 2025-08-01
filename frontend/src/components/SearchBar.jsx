@@ -1,14 +1,15 @@
 import { useState } from "react";
 import "../styles/SearchBar.css";
 
-const SearchBar = ({setChangedNewsData, fromFact, setLoading }) => {
+const SearchBar = ({ setChangedNewsData, fromFact, setLoading }) => {
   const [query, setQuery] = useState("");
 
   const handleSearching = (event) => {
     event.preventDefault();
     setLoading(true);
     if (fromFact) {
-      fetch(`http://localhost:3000/news/fact-checked`, { // combine the two fetches?
+      fetch(`http://localhost:3000/news/fact-checked`, {
+        // combine the two fetches?
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,11 +27,11 @@ const SearchBar = ({setChangedNewsData, fromFact, setLoading }) => {
           return response.json();
         })
         .then((data) => {
-            setLoading(false);
+          setLoading(false);
           setChangedNewsData(data); // NOT the same structure as the other news, must be handled separately
         })
         .catch((error) => {
-            setLoading(false);
+          setLoading(false);
           console.error("Error fetching evidence:", error);
         });
     } else {
@@ -96,7 +97,7 @@ const SearchBar = ({setChangedNewsData, fromFact, setLoading }) => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask a question or fact-check a claim..."
+          placeholder={fromFact ? "Fact-check a claim..." : "e.g. Coldplay"}
         />
 
         <button type="submit" id="submitChange" onClick={handleSearching}>
